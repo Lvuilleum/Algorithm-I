@@ -1,0 +1,47 @@
+\subsection{Matrix Multiplication}
+Given two $n \times n$ matrices $A$ and $B$, the product $C = A \cdot B$ has $c_{ij} = \sum_{k=1}^n a_{ik}b_{kj}$.
+
+\subsubsection{Naive vs. Strassen's Algorithm}
+\begin{itemize}
+    \item \textbf{Naive Algorithm:} Three nested loops, resulting in $\Theta(n^3)$.
+    \item \textbf{Simple Divide-and-Conquer:} Splitting matrices into 4 sub-matrices of size $n/2$. 
+    $T(n) = 8T(n/2) + \Theta(n^2) = \Theta(n^3)$. No improvement.
+    \item \textbf{Strassen's Algorithm:} Uses algebraic tricks to compute only \textbf{7 multiplications} instead of 8.
+    \[ T(n) = 7T(n/2) + \Theta(n^2) \]
+    Using Master Theorem Case 1 ($\log_2 7 \approx 2.81$):
+    \[ \boxed{T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})} \]
+\end{itemize}
+
+\subsection{Heaps and Heapsort}
+Heapsort combines the benefits of Merge Sort ($O(n \log n)$) and Insertion Sort (in-place).
+
+\subsubsection{Binary Heap Structure}
+A heap is an almost complete binary tree stored in an array.
+\begin{itemize}
+    \item \textbf{Root:} $A[1]$
+    \item \textbf{Max-Heap Property:} $A[\text{Parent}(i)] \ge A[i]$. The largest element is at the root.
+    \item \textbf{Height:} A heap of $n$ elements has height $\Theta(\log n)$.
+\end{itemize}
+
+\subsubsection{Key Operations}
+\subsubsection{Max-Heapify}
+Maintains the heap property. If an element is smaller than its children, it "sinks" down the tree.
+\begin{itemize}
+    \item \textbf{Complexity:} $O(\log n)$.
+\end{itemize}
+
+\subsubsection{Build-Max-Heap}
+Converts an unordered array into a Max-Heap by calling \textit{Max-Heapify} on all non-leaf nodes.
+\begin{itemize}
+    \item \textbf{Complexity:} Although it makes $O(n)$ calls to a $\log n$ function, the tighter analysis shows it is \textbf{linear}.
+    \[ \boxed{T(n) = \Theta(n)} \]
+\end{itemize}
+
+\begin{algorithmic}[1]
+\Function{Build-Max-Heap}{$A$}
+    \State $A.heap\_size \gets A.length$
+    \For{$i \gets \lfloor A.length/2 \rfloor$ \textbf{downto} $1$}
+        \State \Call{Max-Heapify}{$A, i$}
+    \EndFor
+\EndFunction
+\end{algorithmic}

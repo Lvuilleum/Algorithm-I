@@ -1,0 +1,42 @@
+
+\subsection{Le paradigme Diviser pour Régner}
+Cette approche récursive pour résoudre un problème se décompose en trois étapes :
+\begin{enumerate}
+    \item \textbf{Diviser} le problème en plusieurs sous-problèmes qui sont des instances plus petites du même problème.
+    \item \textbf{Régner} sur les sous-problèmes en les résolvant récursivement. (Cas de base : si le problème est assez petit, on le résout directement).
+    \item \textbf{Combiner} les solutions des sous-problèmes pour obtenir la solution du problème original.
+\end{enumerate}
+
+\subsection{Tri Fusion (Merge Sort)}
+L'algorithme applique ce paradigme au tri :
+\begin{itemize}
+    \item \textbf{Diviser :} Séparer le tableau de $n$ éléments en deux sous-tableaux de taille $n/2$.
+    \item \textbf{Régner :} Trier récursivement les deux sous-tableaux avec \textsc{Merge-Sort}.
+    \item \textbf{Combiner :} Fusionner (\textsc{Merge}) les deux sous-tableaux triés pour produire un unique tableau trié.
+\end{itemize}
+
+\subsubsection{La procédure Merge (Fusion)}
+L'étape clé est la fusion de deux séquences triées.
+\begin{itemize}
+    \item On compare les têtes des deux listes et on place le plus petit élément dans le tableau de sortie.
+    \item Cette opération prend un temps linéaire $\Theta(n)$ où $n$ est le nombre total d'éléments à fusionner.
+\end{itemize}
+
+\subsection{Analyse du Tri Fusion}
+Soit $T(n)$ le temps pour trier $n$ éléments.
+\begin{equation}
+    T(n) = 
+    \begin{cases} 
+    \Theta(1) & \text{si } n = 1 \\
+    2T(n/2) + \Theta(n) & \text{si } n > 1 
+    \end{cases}
+\end{equation}
+\begin{itemize}
+    \item $2T(n/2)$ correspond à la résolution des deux sous-problèmes.
+    \item $\Theta(n)$ correspond au temps de la division et surtout de la fusion (Combiner).
+\end{itemize}
+
+En résolvant cette récurrence (par exemple via l'arbre de récursion ou le \textit{Master Theorem} vu plus tard), on obtient :
+\[ T(n) = \Theta(n \log n) \]
+
+\textbf{Conclusion :} Pour de grandes valeurs de $n$, le Tri Fusion ($\Theta(n \log n)$) est nettement plus rapide que le Tri par Insertion ($\Theta(n^2)$).

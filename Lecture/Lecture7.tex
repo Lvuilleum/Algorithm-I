@@ -1,0 +1,55 @@
+\textit{Note: The beginning of this lecture is devoted to important recalls on Heaps, Heapsort, and Priority Queues. Since these concepts were already covered in Lecture 6, this summary focuses exclusively on the newly introduced elementary data structures.}
+
+\subsection{Dynamic Sets}
+Data structures are used to implement dynamic sets of elements. The operations on these sets are generally grouped into two categories:
+\begin{itemize}
+    \item \textbf{Modifying operations:} Insert, delete, etc.
+    \item \textbf{Query operations:} Search, minimum, maximum, etc.
+\end{itemize}
+
+\subsection{Stacks}
+A stack is a dynamic data structure that operates on the \textbf{LIFO} (Last-In, First-Out) principle. 
+
+\begin{itemize}
+    \item \textbf{Operations:}
+    \begin{itemize}
+        \item \textsc{Push(S, x)}: Inserts element $x$ at the top of the stack.
+        \item \textsc{Pop(S)}: Removes and returns the element at the top of the stack.
+        \item \textsc{Stack-Empty(S)}: Checks whether the stack is empty.
+    \end{itemize}
+    \item \textbf{Implementation:} Can be implemented using an array \texttt{S} with an attribute \texttt{S.top} that points to the most recently inserted element. The bottom of the stack is at \texttt{S[1]}.
+    \item \textbf{Complexity:} All of these operations execute in constant time $\mathcal{O}(1)$.
+\end{itemize}
+
+\subsection{Queues}
+A queue operates on the \textbf{FIFO} (First-In, First-Out) principle, exactly like a waiting line in real life.
+
+\begin{itemize}
+    \item \textbf{Operations:}
+    \begin{itemize}
+        \item \textsc{Enqueue(Q, x)}: Adds element $x$ to the tail (end) of the queue.
+        \item \textsc{Dequeue(Q)}: Removes and returns the element at the head (front) of the queue.
+    \end{itemize}
+    \item \textbf{Implementation:} Can be implemented using an array \texttt{Q} with two pointers:
+    \begin{itemize}
+        \item \texttt{Q.head}: Points to the first element in the queue (the next one to be dequeued).
+        \item \texttt{Q.tail}: Points to the next available open slot where a newly enqueued element will be placed.
+    \end{itemize}
+    \item \textbf{Complexity:} Both \textsc{Enqueue} and \textsc{Dequeue} operations execute in constant time $\mathcal{O}(1)$.
+\end{itemize}
+
+\subsection{Linked Lists}
+Unlike arrays, where the linear order is determined by array indices, the linear order in a linked list is determined by \textbf{pointers} stored within each object. They can be singly linked (pointers to the next element only) or doubly linked (pointers to both the next and previous elements).
+
+\begin{itemize}
+    \item \textbf{Operations and Complexities:}
+    \begin{itemize}
+        \item \textbf{Search (\textsc{List-Search(L, k)})}: Traverses the list sequentially to find the key $k$. Running time is $\mathcal{O}(n)$.
+        \item \textbf{Insertion (\textsc{List-Insert(L, x)})}: Splices a new element into the list. Running time is $\mathcal{O}(1)$.
+        \item \textbf{Deletion (\textsc{List-Delete(L, x)})}: Removes an element from the list. Running time is $\mathcal{O}(1)$ (for a doubly linked list, assuming we already have the pointer to the object we want to delete).
+    \end{itemize}
+    \item \textbf{Sentinels:} A sentinel is a dummy object (e.g., \texttt{L.nil}) used to represent the beginning or the end of a list. They greatly simplify the code by eliminating the need to handle boundary conditions (such as checking for \texttt{NULL} pointers at the head or tail).
+\end{itemize}
+
+\subsection{Conclusion on Elementary Data Structures}
+Stacks, Queues, and Linked Lists are excellent for specific operations (like insertions and deletions which run in $\mathcal{O}(1)$ time), but they are inherently \textbf{bad at search} operations, as finding a specific element generally requires $\mathcal{O}(n)$ time.

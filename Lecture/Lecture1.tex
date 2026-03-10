@@ -1,0 +1,21 @@
+
+\subsection{Qu'est-ce qu'un algorithme ?}
+Un algorithme est une procédure de calcul bien définie qui prend une ou plusieurs valeurs en \textbf{entrée} (input) et produit une ou plusieurs valeurs en \textbf{sortie} (output). C'est une séquence d'étapes de calcul transformant l'entrée en sortie.
+
+On distingue l'algorithme de la \textbf{structure de données}, qui est une méthode pour stocker et organiser l'information afin de faciliter son accès et sa modification.
+
+\subsection{Exemple introductif : La Somme Arithmétique}
+Le problème est de calculer la somme des entiers de 1 à $n$ : $\sum_{i=1}^{n} i$.
+
+\begin{itemize}
+    \item \textbf{Approche Naïve :} Une boucle qui additionne les nombres un par un.
+    \item \textbf{Approche Intelligente (Gauss) :} Utilisation de la formule fermée $\frac{n(n+1)}{2}$.
+\end{itemize}
+
+\paragraph{Analyse comparative :}
+L'algorithme naïf effectue $n$ additions, sa complexité dépend linéairement de la taille de l'entrée. L'approche de Gauss effectue un nombre constant d'opérations (une multiplication, une addition, une division), quelle que soit la taille de $n$.
+
+\subsection{Pourquoi l'efficacité compte ?}
+Un ordinateur lent exécutant un bon algorithme (ex: $O(1)$ ou $O(n \log n)$) finira par battre un ordinateur très puissant exécutant un mauvais algorithme (ex: $O(n^2)$) lorsque la taille de l'entrée $n$ devient suffisamment grande.
+
+\textbf{Conclusion :} La performance asymptotique (le comportement quand $n \to \infty$) est plus déterminante que les constantes multiplicatives liées au matériel.

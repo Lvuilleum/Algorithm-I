@@ -1,0 +1,45 @@
+\section{Lecture 2 : Tri et Analyse de Complexité}
+
+\subsection{Le Problème du Tri}
+\textbf{Entrée :} Une séquence de $n$ nombres $\langle a_1, a_2, \dots, a_n \rangle$. \\
+\textbf{Sortie :} Une permutation $\langle a'_1, a'_2, \dots, a'_n \rangle$ de la séquence d'entrée telle que $a'_1 \le a'_2 \le \dots \le a'_n$.
+
+\subsection{Tri par Insertion (Insertion Sort)}
+Le tri par insertion fonctionne comme le tri d'une main de cartes à jouer. On parcourt les éléments un par un et on insère chaque nouvel élément à sa place correcte parmi ceux déjà triés (à gauche).
+
+\begin{algorithm}
+\caption{Insertion-Sort(A)}
+\begin{algorithmic}[1]
+\For{$j = 2$ to $A.length$}
+    \State $key = A[j]$
+    \State $i = j - 1$
+    \While{$i > 0$ and $A[i] > key$}
+        \State $A[i+1] = A[i]$ 
+        \State $i = i - 1$
+    \EndWhile
+    \State $A[i+1] = key$ 
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Preuve de Correction : Invariant de Boucle}
+Pour prouver qu'un algorithme itératif est correct, on utilise un \textbf{invariant de boucle}. C'est une propriété qui doit être vraie à trois moments clés :
+\begin{enumerate}
+    \item \textbf{Initialisation :} Vraie avant la première itération.
+    \item \textbf{Conservation (Maintenance) :} Si elle est vraie avant une itération, elle reste vraie avant la suivante.
+    \item \textbf{Terminaison :} À la fin de la boucle, l'invariant fournit la propriété utile pour prouver la correction.
+\end{enumerate}
+
+\textbf{Application au Tri par Insertion :}
+\textit{Invariant :} Au début de chaque itération de la boucle `for` indexée par $j$, le sous-tableau $A[1 \dots j-1]$ contient les éléments qui étaient initialement dans $A[1 \dots j-1]$, mais triés.
+
+\subsection{Analyse de Complexité (Modèle RAM)}
+Nous utilisons le modèle \textbf{Random-Access Machine (RAM)} où chaque instruction simple (arithmétique, accès mémoire, test) prend un temps constant.
+
+\begin{itemize}
+    \item \textbf{Meilleur cas (Best case) :} Le tableau est déjà trié. La boucle `while` ne s'exécute jamais. Complexité : $\Theta(n)$.
+    \item \textbf{Pire cas (Worst case) :} Le tableau est trié en ordre inverse. La boucle `while` s'exécute $j-1$ fois pour chaque $j$.
+    \[ T(n) = \sum_{j=2}^{n} \Theta(j) = \Theta(n^2) \]
+\end{itemize}
+
+Nous nous concentrons généralement sur le \textbf{pire cas} car il fournit une garantie supérieure sur le temps d'exécution.
