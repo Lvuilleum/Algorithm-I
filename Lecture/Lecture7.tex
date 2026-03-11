@@ -51,5 +51,24 @@ Unlike arrays, where the linear order is determined by array indices, the linear
     \item \textbf{Sentinels:} A sentinel is a dummy object (e.g., \texttt{L.nil}) used to represent the beginning or the end of a list. They greatly simplify the code by eliminating the need to handle boundary conditions (such as checking for \texttt{NULL} pointers at the head or tail).
 \end{itemize}
 
+\subsubsection{An exemple on LinkedList of how to reverse it}
+Here is an exemple on how to reverse the linkedList in time complexity $\Theta(n)$ and space complexity $\Theta(1)$ : 
+\begin{algorithm}
+\caption{reverse of linked list}
+\begin{algorithmic}[1]
+\Procedure{Reverse-List}{$L$}
+    \State $prev \gets \text{NIL}$
+    \State $curr \gets L.head$
+    \While{$curr \neq \text{NIL}$}
+        \State $next\_node \gets curr.next$
+        \State $curr.next \gets prev$       
+        \State $prev \gets curr$            
+        \State $curr \gets next\_node$      
+    \EndWhile
+    \State $L.head \gets prev$              
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Conclusion on Elementary Data Structures}
 Stacks, Queues, and Linked Lists are excellent for specific operations (like insertions and deletions which run in $\mathcal{O}(1)$ time), but they are inherently \textbf{bad at search} operations, as finding a specific element generally requires $\mathcal{O}(n)$ time.

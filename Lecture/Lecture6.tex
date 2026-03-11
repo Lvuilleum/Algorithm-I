@@ -1,0 +1,55 @@
+
+
+\textit{Note: The first part of this lecture is a recall on the Maximum-Subarray Problem. As requested, this summary focuses on the new concepts: Matrix Multiplication and Heaps.}
+
+\subsection{Matrix Multiplication}
+\textbf{Problem Definition:} Given two $n \times n$ (square) matrices $A$ and $B$, compute their product $C = A \cdot B$[cite: 2052].
+
+\begin{itemize}
+    \item \textbf{Naive Algorithm:} Computes the product using three nested loops, calculating $c_{ij} = \sum_{k=1}^{n} a_{ik} b_{kj}$[cite: 2057]. Running time is $\Theta(n^3)$ and space is $\Theta(n^2)$[cite: 2063, 2065].
+    \item \textbf{Simple Divide-and-Conquer:} Divides matrices into $n/2 \times n/2$ submatrices[cite: 2073]. It performs $8$ recursive multiplications[cite: 2078]. The recurrence is $T(n) = 8T(n/2) + \Theta(n^2)$, which still yields $T(n) = \Theta(n^3)$[cite: 2082, 2085].
+    \item \textbf{Strassen's Algorithm:} A smarter divide-and-conquer approach that reduces the number of recursive multiplications from 8 to 7, at the cost of some additional matrix additions[cite: 2085, 2086]. 
+    \begin{itemize}
+        \item Recurrence: $T(n) = 7T(n/2) + \Theta(n^2)$[cite: 2091].
+        \item Running Time: Using the Master Theorem, $T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.8})$, which asymptotically beats the naive $\Theta(n^3)$ approach[cite: 2092, 2096].
+    \end{itemize}
+\end{itemize}
+
+\subsection{Heaps and Heapsort}
+Heapsort is an in-place sorting algorithm that runs in $\mathcal{O}(n \log n)$ worst-case time, combining the best properties of Insertion Sort (in-place) and Merge Sort ($\mathcal{O}(n \log n)$)[cite: 2099].
+
+\subsubsection{The Heap Data Structure}
+A binary heap is a nearly complete binary tree[cite: 2107]. 
+\begin{itemize}
+    \item \textbf{Array representation:} It can be stored in an array without pointers[cite: 2116]. For a node at index $i$:
+    \begin{itemize}
+        \item \textsc{Left}$(i) = 2i$ [cite: 2123]
+        \item \textsc{Right}$(i) = 2i + 1$ [cite: 2124]
+        \item \textsc{Parent}$(i) = \lfloor i/2 \rfloor$ [cite: 2125]
+    \end{itemize}
+    \item \textbf{Max-Heap Property:} For every node $i$ other than the root, the key of its parent is greater than or equal to its own key ($A[\textsc{Parent}(i)] \ge A[i]$)[cite: 2109]. The maximum element is always at the root[cite: 2112].
+    \item \textbf{Height:} The height of a heap of size $n$ is $\Theta(\log n)$[cite: 2113].
+\end{itemize}
+
+\subsubsection{Heap Operations}
+\begin{itemize}
+    \item \textsc{Max-Heapify(A, i)}: Ensures the max-heap property for the subtree rooted at $i$, assuming its left and right subtrees are already max-heaps[cite: 2126]. It propagates the element down the tree and takes $\Theta(\text{height of } i) = \mathcal{O}(\log n)$ time[cite: 2130].
+    \item \textsc{Build-Max-Heap(A)}: Constructs a max-heap from an unordered array of length $n$[cite: 2137]. By a tight analysis (since time is linear in the height of the node), it runs in $\mathcal{O}(n)$ time rather than $\mathcal{O}(n \log n)$[cite: 2143, 2144].
+\end{itemize}
+
+\subsubsection{The Heapsort Algorithm}
+\begin{enumerate}
+    \item Build a max-heap from the input array[cite: 2148].
+    \item Starting with the root (the maximum element), place it into its correct position by swapping it with the last element in the array[cite: 2148].
+    \item "Discard" this last node by decreasing the heap size, and call \textsc{Max-Heapify} on the new root to restore the max-heap property[cite: 2148].
+    \item \textbf{Total Running Time:} $\mathcal{O}(n \log n)$ because building the heap takes $\mathcal{O}(n)$ and we call \textsc{Max-Heapify} ($\mathcal{O}(\log n)$) $n-1$ times[cite: 2156].
+\end{enumerate}
+
+\subsection{Priority Queues}
+A priority queue maintains a dynamic set of elements where each element has an associated "key"[cite: 2158]. Heaps efficiently implement priority queues[cite: 2160]. A max-priority queue supports the following operations:
+\begin{itemize}
+    \item \textsc{Maximum(S)}: Returns the element with the largest key in $\mathcal{O}(1)$ time[cite: 2186].
+    \item \textsc{Extract-Max(S)}: Removes and returns the maximum element in $\mathcal{O}(\log n)$ time[cite: 2186].
+    \item \textsc{Increase-Key(S, x, k)}: Increases the key of element $x$ to $k$ and traverses upward to restore the heap property in $\mathcal{O}(\log n)$ time[cite: 2173, 2186].
+    \item \textsc{Insert(S, x)}: Inserts element $x$ into the set in $\mathcal{O}(\log n)$ time[cite: 2186].
+\end{itemize}
