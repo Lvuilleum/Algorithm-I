@@ -1,0 +1,831 @@
+% ─────────────────────────────────────────────
+%  Packages
+% ─────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{trees, positioning, arrows.meta}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{mdframed}
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems, skins, breakable}
+
+% ─────────────────────────────────────────────
+%  Colors
+% ─────────────────────────────────────────────
+\definecolor{keyblue}{RGB}{30, 80, 160}
+\definecolor{lightblue}{RGB}{220, 235, 255}
+\definecolor{keygreen}{RGB}{20, 130, 60}
+\definecolor{lightgreen}{RGB}{220, 245, 225}
+\definecolor{keyred}{RGB}{180, 30, 30}
+\definecolor{lightyellow}{RGB}{255, 252, 220}
+
+% ─────────────────────────────────────────────
+%  Custom theorem environments
+% ─────────────────────────────────────────────
+\newtcbtheorem[number within=section]{definition}{Definition}{
+  colback=lightblue, colframe=keyblue,
+  fonttitle=\bfseries, breakable
+}{def}
+
+\newtcbtheorem[number within=section]{theorem}{Theorem}{
+  colback=lightgreen, colframe=keygreen,
+  fonttitle=\bfseries, breakable
+}{thm}
+
+\newtcbtheorem[number within=section]{remark}{Key Insight}{
+  colback=lightyellow, colframe=orange!70!black,
+  fonttitle=\bfseries, breakable
+}{rem}
+
+\newtcbtheorem[number within=section]{complexity}{Complexity}{
+  colback=gray!10, colframe=gray!60,
+  fonttitle=\bfseries, breakable
+}{cpl}
+
+% ─────────────────────────────────────────────
+%  Metadata
+% ─────────────────────────────────────────────
+
+% ─────────────────────────────────────────────
+%  Algorithmic helpers
+% ─────────────────────────────────────────────
+\algrenewcommand\algorithmicindent{1.5em}
+\newcommand{\AlgComment}[1]{\hfill\textcolor{gray}{\textit{// #1}}}
+
+% ─────────────────────────────────────────────
+
+% ══════════════════════════════════════════════
+% ══════════════════════════════════════════════
+\section{Binary Search Trees (BST)}
+% ══════════════════════════════════════════════
+
+\subsection{Motivating Idea: The Guessing Game}
+
+Ola thinks of an integer between $1$ and $15$.
+When you guess a number he answers \emph{correct}, \emph{smaller}, or
+\emph{larger}.
+
+\medskip\noindent
+\textbf{Optimal strategy:} always guess the \emph{middle} of the remaining
+range.
+\begin{enumerate}[noitemsep]
+  \item Guess $8$: if larger, keep $[9,15]$; if smaller, keep $[1,7]$.
+  \item Guess the middle of the surviving half.
+  \item Repeat.
+\end{enumerate}
+
+This strategy is guaranteed to find any number in $\lceil\log_2 15\rceil = 4$
+guesses, and for 15 elements it actually takes at most \textbf{3 guesses}.
+The tree below encodes this strategy:
+
+\begin{center}
+\begin{tikzpicture}[
+  level distance=1.2cm,
+  sibling distance=1.8cm,
+  every node/.style={circle, draw, inner sep=2pt, font=\small}
+]
+\node {8}
+  child { node {4}
+    child { node {2}
+      child { node {1} }
+      child { node {3} }
+    }
+    child { node {6}
+      child { node {5} }
+      child { node {7} }
+    }
+  }
+  child { node {12}
+    child { node {10}
+      child { node {9} }
+      child { node {11} }
+    }
+    child { node {14}
+      child { node {13} }
+      child { node {15} }
+    }
+  };
+\end{tikzpicture}
+\end{center}
+
+\subsection{Definition and Key Property}
+
+\begin{definition}{Binary Search Tree}{bst}
+A \textbf{Binary Search Tree (BST)} is a binary tree $T$ where every node $x$
+satisfies:
+\begin{itemize}[noitemsep]
+  \item If $y$ is in the \emph{left} subtree of $x$, then $y.\mathit{key} < x.\mathit{key}$.
+  \item If $y$ is in the \emph{right} subtree of $x$, then $y.\mathit{key} \ge x.\mathit{key}$.
+\end{itemize}
+The tree has a designated root $T.\mathit{root}$.
+The \textbf{height} $h$ is the number of edges on the longest path from the
+root to a leaf.
+\end{definition}
+
+\paragraph{Two extreme shapes.}
+\begin{itemize}[noitemsep]
+  \item A \emph{balanced} BST with 15 nodes has $h = 3$
+        (each operation visits at most 4 nodes).
+  \item A \emph{degenerate} (linked-list shaped) BST with 15 nodes has $h = 14$
+        --- operations degrade to $O(n)$.
+\end{itemize}
+
+\begin{complexity}{All BST operations}{bstcplx}
+Basic operations (search, insert, delete, min, max, successor, predecessor)
+all run in time \textbf{$O(h)$}, where $h$ is the height of the tree.
+
+For a balanced tree with $n$ nodes: $h = O(\log n)$, giving $O(\log n)$ per
+operation.
+\end{complexity}
+
+% ══════════════════════════════════════════════
+\section{Querying a BST}
+% ══════════════════════════════════════════════
+
+\subsection{Search}
+
+\begin{algorithm}[H]
+\caption{BST-Search($T$, $k$)}
+\begin{algorithmic}[1]
+\State $x \leftarrow T.\mathit{root}$
+\While{$x \ne \mathrm{NIL}$ \textbf{and} $k \ne x.\mathit{key}$}
+  \If{$k < x.\mathit{key}$}
+    \State $x \leftarrow x.\mathit{left}$
+  \Else
+    \State $x \leftarrow x.\mathit{right}$
+  \EndIf
+\EndWhile
+\State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{complexity}{Search}{srchcpl}
+At each step we move one level down the tree.
+\textbf{Running time: $O(h)$.}
+\end{complexity}
+
+\subsection{Minimum and Maximum}
+
+\begin{theorem}{Min / Max location}{minmax}
+\begin{itemize}[noitemsep]
+  \item The \textbf{minimum} is located at the \emph{leftmost} node.
+  \item The \textbf{maximum} is located at the \emph{rightmost} node.
+\end{itemize}
+\end{theorem}
+
+\begin{algorithm}[H]
+\caption{BST-Minimum($x$)}
+\begin{algorithmic}[1]
+\While{$x.\mathit{left} \ne \mathrm{NIL}$}
+  \State $x \leftarrow x.\mathit{left}$
+\EndWhile
+\State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{BST-Maximum($x$)}
+\begin{algorithmic}[1]
+\While{$x.\mathit{right} \ne \mathrm{NIL}$}
+  \State $x \leftarrow x.\mathit{right}$
+\EndWhile
+\State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{complexity}{Min / Max}{minmaxcpl}
+Both algorithms walk a single root-to-leaf path.
+\textbf{Running time: $O(h)$.}
+\end{complexity}
+
+\subsection{Successor and Predecessor}
+
+\begin{definition}{Successor}{succ}
+The \textbf{successor} of node $x$ is the node $y$ such that $y.\mathit{key}$
+is the smallest key strictly greater than $x.\mathit{key}$.
+\end{definition}
+
+\paragraph{Two cases when finding the successor of $x$:}
+
+\begin{enumerate}
+  \item \textbf{$x$ has a non-empty right subtree.}
+        The successor is the \emph{minimum} of the right subtree.
+
+  \item \textbf{$x$ has an empty right subtree.}
+        Go up the tree until we find the first ancestor $y$ such that $x$ lies
+        in $y$'s \emph{left} subtree (i.e.\ $x$ is the maximum in $y$'s left
+        subtree).
+        That ancestor $y$ is the successor.
+        \textit{Intuition: as long as we move left-upward in the tree, we visit
+        smaller keys; the first right-upward step brings us to a larger key.}
+\end{enumerate}
+
+\begin{algorithm}[H]
+\caption{BST-Successor($x$)}
+\begin{algorithmic}[1]
+\If{$x.\mathit{right} \ne \mathrm{NIL}$}
+  \State \Return BST-Minimum($x.\mathit{right}$)
+\EndIf
+\State $y \leftarrow x.\mathit{parent}$
+\While{$y \ne \mathrm{NIL}$ \textbf{and} $x = y.\mathit{right}$}
+  \State $x \leftarrow y$
+  \State $y \leftarrow y.\mathit{parent}$
+\EndWhile
+\State \Return $y$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}{Predecessor}{pred}
+The predecessor is entirely symmetric to the successor: replace \emph{right}
+with \emph{left} and \emph{minimum} with \emph{maximum}.
+\end{remark}
+
+\begin{complexity}{Successor / Predecessor}{succcpl}
+Both algorithms traverse at most one root-to-leaf path (or its reverse).
+\textbf{Running time: $O(h)$.}
+\end{complexity}
+
+% ══════════════════════════════════════════════
+\section{Printing a BST (Tree Traversals)}
+% ══════════════════════════════════════════════
+
+\subsection{Inorder Traversal}
+
+\begin{algorithm}[H]
+\caption{Inorder-Tree-Walk($x$)}
+\begin{algorithmic}[1]
+\If{$x \ne \mathrm{NIL}$}
+  \State Inorder-Tree-Walk($x.\mathit{left}$)
+  \State \textbf{print} $x.\mathit{key}$
+  \State Inorder-Tree-Walk($x.\mathit{right}$)
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Idea.}
+\begin{enumerate}[noitemsep]
+  \item Print the left subtree recursively.
+  \item Print the root.
+  \item Print the right subtree recursively.
+\end{enumerate}
+
+\paragraph{Example.} Running inorder on the tree with root $8$ and nodes
+$\{1,2,3,4,5,6,8,9,10,11,12\}$ produces:
+\[
+  1,\;2,\;3,\;4,\;5,\;6,\;8,\;9,\;10,\;11,\;12
+\]
+Because the BST property guarantees that the inorder traversal always yields
+keys in \emph{sorted (non-decreasing) order}.
+
+\begin{complexity}{Inorder traversal}{inordercpl}
+Every node is visited exactly once.
+\textbf{Running time: $\Theta(n)$.}
+\end{complexity}
+
+\subsection{Preorder and Postorder Traversals}
+
+\begin{minipage}[t]{0.48\textwidth}
+\begin{algorithm}[H]
+\caption{Preorder-Tree-Walk($x$)}
+\begin{algorithmic}[1]
+\If{$x \ne \mathrm{NIL}$}
+  \State \textbf{print} $x.\mathit{key}$
+  \State Preorder-Tree-Walk($x.\mathit{left}$)
+  \State Preorder-Tree-Walk($x.\mathit{right}$)
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\begin{algorithm}[H]
+\caption{Postorder-Tree-Walk($x$)}
+\begin{algorithmic}[1]
+\If{$x \ne \mathrm{NIL}$}
+  \State Postorder-Tree-Walk($x.\mathit{left}$)
+  \State Postorder-Tree-Walk($x.\mathit{right}$)
+  \State \textbf{print} $x.\mathit{key}$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}
+
+\medskip
+\begin{itemize}[noitemsep]
+  \item \textbf{Preorder:} root $\to$ left $\to$ right. Useful for copying/serialising a tree.
+  \item \textbf{Postorder:} left $\to$ right $\to$ root. Useful for deleting a tree or evaluating expressions.
+\end{itemize}
+
+% ══════════════════════════════════════════════
+\section{Modifying a BST}
+% ══════════════════════════════════════════════
+
+\subsection{Insertion}
+
+\paragraph{Idea.}
+\begin{enumerate}[noitemsep]
+  \item Search for $z.\mathit{key}$.
+  \item When the search reaches \texttt{NIL}, insert $z$ at that position.
+\end{enumerate}
+
+\begin{algorithm}[H]
+\caption{BST-Insert($T$, $z$)}
+\begin{algorithmic}[1]
+\State $y \leftarrow \mathrm{NIL}$; \quad $x \leftarrow T.\mathit{root}$
+\While{$x \ne \mathrm{NIL}$}
+  \State $y \leftarrow x$
+  \If{$z.\mathit{key} < x.\mathit{key}$}
+    \State $x \leftarrow x.\mathit{left}$
+  \Else
+    \State $x \leftarrow x.\mathit{right}$
+  \EndIf
+\EndWhile
+\State $z.\mathit{parent} \leftarrow y$
+\If{$y = \mathrm{NIL}$}
+  \State $T.\mathit{root} \leftarrow z$ \AlgComment{tree was empty}
+\ElsIf{$z.\mathit{key} < y.\mathit{key}$}
+  \State $y.\mathit{left} \leftarrow z$
+\Else
+  \State $y.\mathit{right} \leftarrow z$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Examples.}
+\begin{itemize}[noitemsep]
+  \item Insert $7$: search reaches the right child of $6$, place there.
+  \item Insert $13$: search leads to the right child of $12$.
+  \item Insert $9.5$: search reaches the right child of $9$.
+\end{itemize}
+
+\begin{complexity}{Insertion}{inscpl}
+A ``search'' phase ($O(h)$) followed by a constant-time ``insert'' phase.
+\textbf{Running time: $O(h)$.}
+\end{complexity}
+
+\subsection{Deletion}
+
+Deletion conceptually has \textbf{three cases} depending on the number of
+children of the node $z$ to be deleted:
+
+\begin{enumerate}
+  \item \textbf{$z$ has no children.} Simply remove $z$.
+
+  \item \textbf{$z$ has exactly one child.} Replace $z$ by its child in the
+        tree.
+
+  \item \textbf{$z$ has two children.} Find $z$'s successor $y$ (the minimum
+        of $z$'s right subtree, which has no left child).
+        Splice $y$ out of its current position and put $y$ in $z$'s place.
+\end{enumerate}
+
+\subsubsection{Transplant subroutine}
+
+\begin{algorithm}[H]
+\caption{Transplant($T$, $u$, $v$)}
+\begin{algorithmic}[1]
+\State \textit{Replaces the subtree rooted at $u$ with the subtree rooted at $v$}
+\If{$u.\mathit{parent} = \mathrm{NIL}$}
+  \State $T.\mathit{root} \leftarrow v$
+\ElsIf{$u = u.\mathit{parent}.\mathit{left}$}
+  \State $u.\mathit{parent}.\mathit{left} \leftarrow v$
+\Else
+  \State $u.\mathit{parent}.\mathit{right} \leftarrow v$
+\EndIf
+\If{$v \ne \mathrm{NIL}$}
+  \State $v.\mathit{parent} \leftarrow u.\mathit{parent}$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Deletion procedure}
+
+\begin{algorithm}[H]
+\caption{BST-Delete($T$, $z$)}
+\begin{algorithmic}[1]
+\If{$z.\mathit{left} = \mathrm{NIL}$}
+  \State Transplant($T$, $z$, $z.\mathit{right}$)
+\ElsIf{$z.\mathit{right} = \mathrm{NIL}$}
+  \State Transplant($T$, $z$, $z.\mathit{left}$)
+\Else
+  \State $y \leftarrow$ BST-Minimum($z.\mathit{right}$) \AlgComment{successor}
+  \If{$y.\mathit{parent} \ne z$}
+    \State Transplant($T$, $y$, $y.\mathit{right}$)
+    \State $y.\mathit{right} \leftarrow z.\mathit{right}$
+    \State $y.\mathit{right}.\mathit{parent} \leftarrow y$
+  \EndIf
+  \State Transplant($T$, $z$, $y$)
+  \State $y.\mathit{left} \leftarrow z.\mathit{left}$
+  \State $y.\mathit{left}.\mathit{parent} \leftarrow y$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{complexity}{Deletion}{delcpl}
+Uses search (find successor) and a constant number of pointer updates.
+\textbf{Running time: $O(h)$.}
+\end{complexity}
+
+% ══════════════════════════════════════════════
+\section{Summary of BST Operations}
+% ══════════════════════════════════════════════
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{Time} & \textbf{Key idea} \\
+\midrule
+Search             & $O(h)$ & Follow left/right based on key comparison \\
+Minimum / Maximum  & $O(h)$ & Leftmost / rightmost node \\
+Successor / Pred.  & $O(h)$ & Min of right subtree or first right ancestor \\
+Insertion          & $O(h)$ & Search phase + leaf insertion \\
+Deletion           & $O(h)$ & Three cases; uses Transplant \\
+Inorder walk       & $\Theta(n)$ & Visit every node once \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{remark}{Balancing}{balance}
+In the worst case $h = \Theta(n)$ (degenerate tree), degrading all $O(h)$
+operations to $O(n)$.
+Efficient self-balancing procedures (AVL trees, red-black trees, etc.)
+maintain $h = O(\log n)$, giving $O(\log n)$ per operation.
+\end{remark}
+
+% ══════════════════════════════════════════════
+\section{Comparison of Data Structures}
+% ══════════════════════════════════════════════
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Structure} & \textbf{Capacity} & \textbf{Insert} & \textbf{Delete} & \textbf{Search} \\
+\midrule
+Stack (array)          & Fixed   & $O(1)$ & $O(1)$ & $O(n)$ \\
+Queue (array)          & Fixed   & $O(1)$ & $O(1)$ & $O(n)$ \\
+Linked List            & Dynamic & $O(1)$ & $O(1)$ & $O(n)$ \\
+BST (balanced)         & Dynamic & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ══════════════════════════════════════════════
+\section{Introduction to Dynamic Programming}
+% ══════════════════════════════════════════════
+
+\begin{definition}{Dynamic Programming (DP)}{dp}
+Dynamic programming is an \emph{algorithmic paradigm} (not a programming
+language feature).
+Its core idea is:
+\begin{center}
+  \textbf{Remember calculations already made --- avoid recomputing them.}
+\end{center}
+This can save \emph{enormous} amounts of computation and allows solving many
+optimisation problems efficiently.
+\end{definition}
+
+\begin{remark}{Illustrative analogy}{dpanalogy}
+Consider evaluating $\sqrt{25} + 3 - \sqrt{16}$.
+A smart solver computes $\sqrt{25} = 5$ once and reuses the result, rather than
+computing it fresh every time it appears.
+The same principle underlies DP.
+\end{remark}
+
+\subsection{Key Elements in Designing a DP Algorithm}
+
+\begin{enumerate}
+  \item \textbf{Optimal substructure.} Show that a solution consists of making
+        a choice, which leaves one or several subproblems to solve, \emph{and}
+        the optimal solution solves those subproblems optimally.
+
+  \item \textbf{Overlapping subproblems.} A naive recursive algorithm would
+        revisit the same subproblem over and over.
+        DP avoids this via:
+        \begin{itemize}[noitemsep]
+          \item \textbf{Top-down with memoization:} Solve recursively but store
+                each result in a table; on a recursive call check the table
+                first.
+          \item \textbf{Bottom-up:} Sort subproblems by size and solve the
+                smaller ones first; when reaching a subproblem, all needed
+                smaller subproblems are already solved.
+        \end{itemize}
+\end{enumerate}
+
+% ══════════════════════════════════════════════
+\section{First Application: Fibonacci Numbers}
+% ══════════════════════════════════════════════
+
+\subsection{Definition}
+
+The Fibonacci sequence was described over 1000 years ago:
+\[
+  F_0 = 1,\quad F_1 = 1,\quad F_n = F_{n-1} + F_{n-2} \quad (n \ge 2).
+\]
+First terms: $1, 1, 2, 3, 5, 8, 13, 21, 34, \ldots$
+
+\subsection{Naïve Recursive Algorithm}
+
+\begin{algorithm}[H]
+\caption{Fib($n$)}
+\begin{algorithmic}[1]
+\If{$n = 0$ \textbf{or} $n = 1$}
+  \State \Return $1$
+\Else
+  \State \Return $\mathrm{Fib}(n-1) + \mathrm{Fib}(n-2)$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Problem.}
+The recursion tree recomputes the same subproblems exponentially many times.
+For example, $\mathrm{Fib}(n-2)$ is computed once in the call for $n$ and
+again inside $\mathrm{Fib}(n-1)$.
+The total running time is \textbf{exponential} in $n$.
+
+\subsection{Top-Down with Memoization}
+
+\begin{algorithm}[H]
+\caption{Memoized-Fib($n$)}
+\begin{algorithmic}[1]
+\State Let $r[0 \ldots n]$ be a new array
+\For{$i = 0$ \textbf{to} $n$}
+  \State $r[i] \leftarrow -\infty$
+\EndFor
+\State \Return Memoized-Fib-Aux($n$, $r$)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Memoized-Fib-Aux($n$, $r$)}
+\begin{algorithmic}[1]
+\If{$r[n] \ge 0$}
+  \State \Return $r[n]$ \AlgComment{already computed}
+\EndIf
+\If{$n = 0$ \textbf{or} $n = 1$}
+  \State $\mathit{ans} \leftarrow 1$
+\Else
+  \State $\mathit{ans} \leftarrow \mathrm{M\text{-}F\text{-}A}(n-1, r) + \mathrm{M\text{-}F\text{-}A}(n-2, r)$
+\EndIf
+\State $r[n] \leftarrow \mathit{ans}$
+\State \Return $r[n]$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Time analysis.}
+\begin{itemize}[noitemsep]
+  \item Steps 1--3 of Memoized-Fib: $\Theta(n)$.
+  \item Each call to Memoized-Fib-Aux executes in $\Theta(1)$ (once the table
+        is populated, all subsequent lookups are $O(1)$).
+  \item Number of \emph{actual} (non-lookup) calls to Memoized-Fib-Aux:
+        $\Theta(n)$ (one per distinct value $0, 1, \ldots, n$).
+  \item \textbf{Total: $\Theta(n)$.}
+\end{itemize}
+
+\subsection{Bottom-Up Algorithm}
+
+\begin{algorithm}[H]
+\caption{Bottom-Up-Fib($n$)}
+\begin{algorithmic}[1]
+\State Let $r[0 \ldots n]$ be a new array
+\State $r[0] \leftarrow 1$; \quad $r[1] \leftarrow 1$
+\For{$i = 2$ \textbf{to} $n$}
+  \State $r[i] \leftarrow r[i-1] + r[i-2]$
+\EndFor
+\State \Return $r[n]$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Example ($n = 8$):}
+\[
+  r = [1,\;1,\;2,\;3,\;5,\;8,\;13,\;21,\;34]
+\]
+
+\begin{complexity}{Bottom-Up Fibonacci}{bubfib}
+A single loop of $n$ iterations. \textbf{Time: $\Theta(n)$.}
+\end{complexity}
+
+\paragraph{Summary for Fibonacci.}
+\begin{enumerate}[noitemsep]
+  \item Start with a recursive formulation.
+  \item Introduce a memory array $r$.
+  \item Fill the table either top-down (memoization) or bottom-up.
+  \item Both approaches achieve $\Theta(n)$ versus exponential for naïve recursion.
+\end{enumerate}
+
+% ══════════════════════════════════════════════
+\section{Rod Cutting}
+% ══════════════════════════════════════════════
+
+\subsection{Problem Statement}
+
+\begin{definition}{Rod Cutting}{rodcut}
+\textbf{Input:}
+\begin{itemize}[noitemsep]
+  \item A metal rod of length $n$.
+  \item A price table $p_i$ for a rod of length $i$, for $i = 1, \ldots, n$.
+\end{itemize}
+\textbf{Objective:} Decide how to cut the rod into pieces to \emph{maximise} the
+total price.
+\end{definition}
+
+\paragraph{Size of the problem.}
+There are $2^{n-1}$ possible ways to cut (cut or do not cut after each
+unit-length position). Brute force is infeasible for large $n$.
+
+\subsection{Optimal Substructure}
+
+\begin{theorem}{Structural Theorem for Rod Cutting}{rodthm}
+Suppose the leftmost cut in an optimal solution is after $i$ units, and let
+$s_1, s_2, \ldots, s_k$ be an optimal way to cut a rod of size $n - i$.
+Then the optimal solution for the entire rod is: cut sizes
+$i, s_1, s_2, \ldots, s_k$.
+\end{theorem}
+
+\begin{proof}
+\textbf{Feasibility.} Since $s_1, \ldots, s_k$ is feasible for size $n - i$,
+we have $\sum_{j=1}^{k} s_j = n - i$, hence $i + \sum_{j=1}^{k} s_j = n$.
+
+\medskip\noindent
+\textbf{Optimality.} Let $i, o_1, \ldots, o_\ell$ be an optimal solution.
+Since $s_1, \ldots, s_k$ is optimal for the sub-rod of size $n - i$:
+\[
+  \sum_{j=1}^{k} p_{s_j} \;\ge\; \sum_{j=1}^{\ell} p_{o_j}.
+\]
+Adding $p_i$ to both sides:
+\[
+  p_i + \sum_{j=1}^{k} p_{s_j} \;\ge\; p_i + \sum_{j=1}^{\ell} p_{o_j},
+\]
+which shows that $i, s_1, \ldots, s_k$ is at least as good as any optimal
+solution. \qed
+\end{proof}
+
+\subsection{Recursive Formulation}
+
+Let $r(n)$ denote the optimal revenue for a rod of length $n$.
+By the structural theorem:
+\[
+  r(n) =
+  \begin{cases}
+    0 & \text{if } n = 0, \\
+    \displaystyle\max_{1 \le i \le n}\bigl\{p_i + r(n - i)\bigr\} & \text{if } n \ge 1.
+  \end{cases}
+\]
+
+\paragraph{Naïve recursion problem.}
+A direct recursive implementation recomputes the same sub-problems
+exponentially many times. Running time: \textbf{exponential}.
+
+\subsection{Top-Down DP for Rod Cutting}
+
+\paragraph{General approach.}
+\begin{enumerate}[noitemsep]
+  \item Keep the recursive structure.
+  \item Memoize (store) the result of every recursive call in a table $r$.
+  \item At each recursive call, check the table first to avoid redundant work.
+\end{enumerate}
+
+\paragraph{Subproblem graph.}
+One can think of all recursive calls using a memoized value as additional
+parents in a DAG. Memoization ensures each subproblem is computed at most once.
+
+\begin{complexity}{Top-Down Rod Cutting}{tdrcpl}
+\begin{itemize}[noitemsep]
+  \item Initialisation: $O(n)$.
+  \item Processing each subproblem $r(j)$: $O(j)$ (loop over $i = 1, \ldots, j$).
+  \item Total edges in subproblem graph: $O(n^2)$.
+  \item \textbf{Total time: $O(n^2)$.}
+\end{itemize}
+\end{complexity}
+
+\subsection{Bottom-Up DP for Rod Cutting}
+
+\paragraph{General approach.}
+\begin{enumerate}[noitemsep]
+  \item Sort subproblems by size.
+  \item Solve smaller subproblems first.
+  \item When solving $r(j)$, all $r(0), \ldots, r(j-1)$ are already in the table.
+\end{enumerate}
+
+\begin{complexity}{Bottom-Up Rod Cutting}{burcpl}
+Same analysis as top-down. \textbf{Time: $O(n^2)$.}
+\end{complexity}
+
+\subsection{Reconstructing an Optimal Solution}
+
+The algorithms above only compute the \emph{optimal value} $r(n)$.
+To find an \emph{optimal solution} (i.e., the actual cut sizes):
+
+\begin{enumerate}[noitemsep]
+  \item Maintain a separate table $s[0 \ldots n]$ where $s[j]$ stores the
+        leftmost cut used when computing $r(j)$.
+  \item Once $r$ and $s$ are filled, trace back:
+        cut off $s[n]$ units, then recurse on the remaining $n - s[n]$ units.
+\end{enumerate}
+
+\paragraph{Example output table (price table: $p_1=1, p_2=5, p_3=8, p_4=9, \ldots$):}
+\[
+\begin{array}{ccccccccc}
+\toprule
+i    & 0 & 1 & 2 & 3 & 4  & 5  & 6  & 7  & 8  \\
+\midrule
+r[i] & 0 & 1 & 5 & 8 & 10 & 13 & 17 & 18 & 22 \\
+s[i] & 0 & 1 & 2 & 3 &  2 &  2 &  6 &  1 &  2 \\
+\bottomrule
+\end{array}
+\]
+
+% ══════════════════════════════════════════════
+\section{The Change-Making Problem}
+% ══════════════════════════════════════════════
+
+\begin{definition}{Change-Making Problem}{change}
+\textbf{Input:}
+\begin{itemize}[noitemsep]
+  \item $n$ distinct coin denominations (integers) $0 < w_1 < w_2 < \cdots < w_n$.
+  \item A target amount $W$ (a positive integer).
+\end{itemize}
+\textbf{Output:} The minimum number of coins to make exactly $W$:
+\[
+  \min\!\left\{ \sum_{j=1}^{n} x_j \;:\; \sum_{j=1}^{n} w_j x_j = W,\; x_j \in \mathbb{Z}_{\ge 0} \right\}.
+\]
+\textbf{Example:} $w_1=1, w_2=2, w_3=5$, $W=8$.
+Optimal: $x_1 = x_2 = x_3 = 1$ (one coin of each denomination),
+using 3 coins total.
+\end{definition}
+
+\paragraph{DP approach.}
+Define $c(w)$ = minimum number of coins to make $w$.
+\[
+  c(w) =
+  \begin{cases}
+    0 & \text{if } w = 0, \\
+    \displaystyle\min_{1 \le j \le n,\; w_j \le w} \bigl\{1 + c(w - w_j)\bigr\} & \text{if } w \ge 1.
+  \end{cases}
+\]
+Fill the table bottom-up for $w = 0, 1, \ldots, W$.
+\textbf{Time: $O(nW)$.}
+
+% ══════════════════════════════════════════════
+\section{General DP Recipe}
+% ══════════════════════════════════════════════
+
+\begin{tcolorbox}[
+  colback=lightblue,
+  colframe=keyblue,
+  title={\textbf{Steps for Designing a DP Algorithm}},
+  fonttitle=\bfseries
+]
+\begin{enumerate}
+  \item \textbf{Identify choices and optimal substructure.}
+        Show that making one choice reduces the problem to smaller subproblems,
+        and that the optimal solution uses optimal sub-solutions.
+
+  \item \textbf{Write a recursive formula} for the optimal value as a function
+        of smaller subproblem values.
+
+  \item \textbf{Avoid repeated work} using either:
+        \begin{itemize}[noitemsep]
+          \item Top-down with memoization, \textbf{or}
+          \item Bottom-up table filling.
+        \end{itemize}
+
+  \item \textbf{(Optional) Reconstruct the solution} by storing decision
+        choices in an auxiliary table and tracing back.
+\end{enumerate}
+\end{tcolorbox}
+
+% ══════════════════════════════════════════════
+\section{Lecture Summary}
+% ══════════════════════════════════════════════
+
+\paragraph{Binary Search Trees.}
+\begin{itemize}[noitemsep]
+  \item BSTs encode a binary-search strategy for keys.
+  \item All query operations (Search, Min, Max, Successor, Predecessor): $O(h)$.
+  \item All modifying operations (Insertion, Deletion): $O(h)$.
+  \item Efficient balancing procedures (AVL trees, red-black trees) maintain
+        $h = O(\log n)$, giving $O(\log n)$ per operation.
+\end{itemize}
+
+\paragraph{Dynamic Programming.}
+\begin{itemize}[noitemsep]
+  \item An algorithmic paradigm, not a programming construct.
+  \item Key elements: \emph{optimal substructure} and \emph{overlapping
+        subproblems}.
+  \item Two implementation strategies: top-down memoization and bottom-up table
+        filling.
+  \item Illustrated on Fibonacci numbers ($\Theta(n)$), rod cutting ($O(n^2)$),
+        and coin change ($O(nW)$).
+\end{itemize}
+l
