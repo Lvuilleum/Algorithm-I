@@ -1,55 +1,81 @@
+% Lecture 6 : Heapsort & Files de priorité
+% (Les rappels sur la multiplication de matrices et la structure de tas
+%  ont été couverts en Lecture 5.)
 
+\subsection{L'algorithme Heapsort}
 
-\textit{Note: The first part of this lecture is a recall on the Maximum-Subarray Problem. As requested, this summary focuses on the new concepts: Matrix Multiplication and Heaps.}
+Heapsort trie un tableau \emph{en place} en $O(n\log n)$ dans le pire cas.
 
-\subsection{Matrix Multiplication}
-\textbf{Problem Definition:} Given two $n \times n$ (square) matrices $A$ and $B$, compute their product $C = A \cdot B$.
-
-\begin{itemize}
-    \item \textbf{Naive Algorithm:} Computes the product using three nested loops, calculating $c_{ij} = \sum_{k=1}^{n} a_{ik} b_{kj}$. Running time is $\Theta(n^3)$ and space is $\Theta(n^2)$.
-    \item \textbf{Simple Divide-and-Conquer:} Divides matrices into $n/2 \times n/2$ submatrices. It performs $8$ recursive multiplications. The recurrence is $T(n) = 8T(n/2) + \Theta(n^2)$, which still yields $T(n) = \Theta(n^3)$.
-    \item \textbf{Strassen's Algorithm:} A smarter divide-and-conquer approach that reduces the number of recursive multiplications from 8 to 7, at the cost of some additional matrix additions.
-    \begin{itemize}
-        \item Recurrence: $T(n) = 7T(n/2) + \Theta(n^2)$.
-        \item Running Time: Using the Master Theorem, $T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.8})$, which asymptotically beats the naive $\Theta(n^3)$ approach.
-    \end{itemize}
-\end{itemize}
-
-\subsection{Heaps and Heapsort}
-Heapsort is an in-place sorting algorithm that runs in $\mathcal{O}(n \log n)$ worst-case time, combining the best properties of Insertion Sort (in-place) and Merge Sort ($\mathcal{O}(n \log n)$).
-
-\subsubsection{The Heap Data Structure}
-A binary heap is a nearly complete binary tree.
-\begin{itemize}
-    \item \textbf{Array representation:} It can be stored in an array without pointers. For a node at index $i$:
-    \begin{itemize}
-        \item \textsc{Left}$(i) = 2i$ 
-        \item \textsc{Right}$(i) = 2i + 1$
-        \item \textsc{Parent}$(i) = \lfloor i/2 \rfloor$ 
-    \end{itemize}
-    \item \textbf{Max-Heap Property:} For every node $i$ other than the root, the key of its parent is greater than or equal to its own key ($A[\textsc{Parent}(i)] \ge A[i]$). The maximum element is always at the root.
-    \item \textbf{Height:} The height of a heap of size $n$ is $\Theta(\log n)$.
-\end{itemize}
-
-\subsubsection{Heap Operations}
-\begin{itemize}
-    \item \textsc{Max-Heapify(A, i)}: Ensures the max-heap property for the subtree rooted at $i$, assuming its left and right subtrees are already max-heaps. It propagates the element down the tree and takes $\Theta(\text{height of } i) = \mathcal{O}(\log n)$ time.
-    \item \textsc{Build-Max-Heap(A)}: Constructs a max-heap from an unordered array of length $n$. By a tight analysis (since time is linear in the height of the node), it runs in $\mathcal{O}(n)$ time rather than $\mathcal{O}(n \log n)$.
-\end{itemize}
-
-\subsubsection{The Heapsort Algorithm}
 \begin{enumerate}
-    \item Build a max-heap from the input array.
-    \item Starting with the root (the maximum element), place it into its correct position by swapping it with the last element in the array.
-    \item "Discard" this last node by decreasing the heap size, and call \textsc{Max-Heapify} on the new root to restore the max-heap property.
-    \item \textbf{Total Running Time:} $\mathcal{O}(n \log n)$ because building the heap takes $\mathcal{O}(n)$ and we call \textsc{Max-Heapify} ($\mathcal{O}(\log n)$) $n-1$ times.
+  \item \textbf{Construire} un max-heap depuis le tableau d'entrée : $O(n)$.
+  \item \textbf{Répéter $n-1$ fois :}
+    \begin{enumerate}[label=\alph*.]
+      \item Échanger la racine (maximum) $A[1]$ avec le dernier élément $A[heap\_size]$.
+      \item Réduire $heap\_size$ de 1 (l'élément échangé est à sa place définitive).
+      \item Appeler \textsc{Max-Heapify}$(A, 1)$ pour restaurer la propriété : $O(\log n)$.
+    \end{enumerate}
 \end{enumerate}
 
-\subsection{Priority Queues}
-A priority queue maintains a dynamic set of elements where each element has an associated "key". Heaps efficiently implement priority queues. A max-priority queue supports the following operations:
-\begin{itemize}
-    \item \textsc{Maximum(S)}: Returns the element with the largest key in $\mathcal{O}(1)$ time.
-    \item \textsc{Extract-Max(S)}: Removes and returns the maximum element in $\mathcal{O}(\log n)$ time.
-    \item \textsc{Increase-Key(S, x, k)}: Increases the key of element $x$ to $k$ and traverses upward to restore the heap property in $\mathcal{O}(\log n)$ time.
-    \item \textsc{Insert(S, x)}: Inserts element $x$ into the set in $\mathcal{O}(\log n)$ time.
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth]
+  % Steps illustration
+  \node[draw, fill=blue!10, minimum width=1cm, minimum height=0.7cm] (r) at (0,1.5) {16};
+  \node[above=2pt of r, font=\tiny, keyred] {max};
+  \foreach \v/\i in {14/1, 10/2, 8/3, 7/4, 9/5, 3/6, 2/7, 4/8, 1/9}{
+    \node[draw, fill=blue!5, minimum width=0.75cm, minimum height=0.65cm]
+          at (\i*0.85-0.5+0.9, 0) {\v};
+  }
+  \node[draw, fill=green!20, minimum width=0.75cm, minimum height=0.65cm]
+        at (0, 0) {16};
+  % Arrow
+  \draw[->, thick, keyred] (0, 1.1) -- (0, 0.4);
+  \node[right=2pt, font=\tiny] at (0, 0.75) {place finale};
+\end{tikzpicture}
+\end{center}
+
+\begin{complexity}{Heapsort}{heapcplx}
+\begin{itemize}[noitemsep]
+  \item \textsc{Build-Max-Heap} : $O(n)$.
+  \item $n-1$ appels à \textsc{Max-Heapify} : $O(\log n)$ chacun.
+  \item \textbf{Total : $O(n \log n)$ dans tous les cas.}
 \end{itemize}
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Files de priorité (\textit{Priority Queues})}
+
+Une \textbf{file de priorité (max)} maintient un ensemble dynamique d'éléments avec clé,
+et supporte :
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lll}
+\toprule
+\textbf{Opération} & \textbf{Description} & \textbf{Temps} \\
+\midrule
+\textsc{Maximum}$(S)$       & Retourne l'élément de clé maximale & $O(1)$ \\
+\textsc{Extract-Max}$(S)$   & Retire et retourne le maximum      & $O(\log n)$ \\
+\textsc{Increase-Key}$(S,x,k)$ & Augmente la clé de $x$ à $k$   & $O(\log n)$ \\
+\textsc{Insert}$(S,x)$      & Insère $x$ dans $S$                & $O(\log n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Implémentation} : le tas binaire implémente toutes ces opérations efficacement.
+
+\paragraph{\textsc{Extract-Max}.}
+\begin{enumerate}[noitemsep]
+  \item Sauvegarder $A[1]$ (le maximum).
+  \item Mettre $A[heap\_size]$ à la racine, réduire $heap\_size$.
+  \item Appeler \textsc{Max-Heapify}$(A,1)$.
+\end{enumerate}
+
+\paragraph{\textsc{Increase-Key}$(A, i, k)$.}
+Après avoir mis à jour $A[i] \leftarrow k$, remonter dans l'arbre tant que la propriété
+max-heap est violée (l'élément « flotte » vers le haut).
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Application : file d'attente à priorité}]
+Utilisée dans les algorithmes de graphes (Dijkstra, Prim) pour extraire efficacement
+le prochain sommet à traiter.
+\end{tcolorbox}

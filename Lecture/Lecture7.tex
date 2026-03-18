@@ -1,74 +1,148 @@
-\textit{Note: The beginning of this lecture is devoted to important recalls on Heaps, Heapsort, and Priority Queues. Since these concepts were already covered in Lecture 6, this summary focuses exclusively on the newly introduced elementary data structures.}
+\subsection{Ensembles dynamiques}
 
-\subsection{Dynamic Sets}
-Data structures are used to implement dynamic sets of elements. The operations on these sets are generally grouped into two categories:
-\begin{itemize}
-    \item \textbf{Modifying operations:} Insert, delete, etc.
-    \item \textbf{Query operations:} Search, minimum, maximum, etc.
-\end{itemize}
-
-\subsection{Stacks}
-A stack is a dynamic data structure that operates on the \textbf{LIFO} (Last-In, First-Out) principle. 
+Les structures de données servent à implémenter des \textbf{ensembles dynamiques}.
+Les opérations se regroupent en deux catégories :
 
 \begin{itemize}
-    \item \textbf{Operations:}
-    \begin{itemize}
-        \item \textsc{Push(S, x)}: Inserts element $x$ at the top of the stack.
-        \item \textsc{Pop(S)}: Removes and returns the element at the top of the stack.
-        \item \textsc{Stack-Empty(S)}: Checks whether the stack is empty.
-    \end{itemize}
-    \item \textbf{Implementation:} Can be implemented using an array \texttt{S} with an attribute \texttt{S.top} that points to the most recently inserted element. The bottom of the stack is at \texttt{S[1]}.
-    \item \textbf{Complexity:} All of these operations execute in constant time $\mathcal{O}(1)$.
+  \item \textbf{Modification} : Insert, Delete, \dots
+  \item \textbf{Requête} : Search, Minimum, Maximum, \dots
 \end{itemize}
 
-\subsection{Queues}
-A queue operates on the \textbf{FIFO} (First-In, First-Out) principle, exactly like a waiting line in real life.
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Piles (\textit{Stacks}) -- LIFO}
+
+Une pile suit le principe \textbf{LIFO} (\textit{Last-In, First-Out}) : dernier entré,
+premier sorti, comme une pile d'assiettes.
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth]
+  \foreach \v/\i in {3/1, 7/2, 1/3}{
+    \node[draw, fill=blue!10, minimum width=1.2cm, minimum height=0.55cm]
+          at (0, \i*0.6-0.3) {\v};
+  }
+  \node[draw, fill=orange!30, minimum width=1.2cm, minimum height=0.55cm]
+        at (0, 4*0.6-0.3) {5};
+  \draw[->, thick, keyred] (1.2, 4*0.6-0.3) -- (0.65, 4*0.6-0.3)
+        node[left=0pt]{}; 
+  \node[right=2pt, keyred] at (1.2, 4*0.6-0.3) {\textsc{Push}/\textsc{Pop}};
+  \node[left=4pt] at (-0.6, 1) {\textit{fond}};
+  \node[left=4pt] at (-0.6, 4*0.6-0.3) {\textit{sommet}};
+  \node[right=2pt, gray] at (0.65, 0.5) {$S.\mathit{top}$};
+\end{tikzpicture}
+\end{center}
 
 \begin{itemize}
-    \item \textbf{Operations:}
-    \begin{itemize}
-        \item \textsc{Enqueue(Q, x)}: Adds element $x$ to the tail (end) of the queue.
-        \item \textsc{Dequeue(Q)}: Removes and returns the element at the head (front) of the queue.
-    \end{itemize}
-    \item \textbf{Implementation:} Can be implemented using an array \texttt{Q} with two pointers:
-    \begin{itemize}
-        \item \texttt{Q.head}: Points to the first element in the queue (the next one to be dequeued).
-        \item \texttt{Q.tail}: Points to the next available open slot where a newly enqueued element will be placed.
-    \end{itemize}
-    \item \textbf{Complexity:} Both \textsc{Enqueue} and \textsc{Dequeue} operations execute in constant time $\mathcal{O}(1)$.
+  \item \textsc{Push}$(S, x)$ : empile $x$ en haut. $O(1)$.
+  \item \textsc{Pop}$(S)$ : retire et retourne le sommet. $O(1)$.
+  \item \textsc{Stack-Empty}$(S)$ : teste si $S.\mathit{top} = 0$. $O(1)$.
 \end{itemize}
 
-\subsection{Linked Lists}
-Unlike arrays, where the linear order is determined by array indices, the linear order in a linked list is determined by \textbf{pointers} stored within each object. They can be singly linked (pointers to the next element only) or doubly linked (pointers to both the next and previous elements).
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Files (\textit{Queues}) -- FIFO}
+
+Une file suit le principe \textbf{FIFO} (\textit{First-In, First-Out}) : premier entré,
+premier sorti, comme une file d'attente.
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth]
+  \foreach \v/\i in {3/0, 7/1, 1/2, 9/3}{
+    \node[draw, fill=orange!15, minimum width=0.9cm, minimum height=0.65cm]
+          at (\i*1.0, 0) {\v};
+  }
+  \draw[->, thick, keygreen] (-0.9, 0) -- (-0.5, 0)
+        node[left=2pt, keygreen]{\textsc{Enqueue}};
+  \draw[->, thick, keyred] (3.5+0.5, 0) -- (3.5+0.9, 0)
+        node[right=2pt, keyred]{\textsc{Dequeue}};
+  \node[below=4pt] at (0, -0.35) {\small$Q.\mathit{head}$};
+  \node[below=4pt] at (3, -0.35) {\small$Q.\mathit{tail}$};
+\end{tikzpicture}
+\end{center}
 
 \begin{itemize}
-    \item \textbf{Operations and Complexities:}
-    \begin{itemize}
-        \item \textbf{Search (\textsc{List-Search(L, k)})}: Traverses the list sequentially to find the key $k$. Running time is $\mathcal{O}(n)$.
-        \item \textbf{Insertion (\textsc{List-Insert(L, x)})}: Splices a new element into the list. Running time is $\mathcal{O}(1)$.
-        \item \textbf{Deletion (\textsc{List-Delete(L, x)})}: Removes an element from the list. Running time is $\mathcal{O}(1)$ (for a doubly linked list, assuming we already have the pointer to the object we want to delete).
-    \end{itemize}
-    \item \textbf{Sentinels:} A sentinel is a dummy object (e.g., \texttt{L.nil}) used to represent the beginning or the end of a list. They greatly simplify the code by eliminating the need to handle boundary conditions (such as checking for \texttt{NULL} pointers at the head or tail).
+  \item \textsc{Enqueue}$(Q, x)$ : ajoute $x$ en queue. $O(1)$.
+  \item \textsc{Dequeue}$(Q)$ : retire et retourne l'élément de tête. $O(1)$.
 \end{itemize}
 
-\subsubsection{An exemple on LinkedList of how to reverse it}
-Here is an exemple on how to reverse the linkedList in time complexity $\Theta(n)$ and space complexity $\Theta(1)$ : 
-\begin{algorithm}
-\caption{reverse of linked list}
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Listes chaînées (\textit{Linked Lists})}
+
+L'ordre linéaire est déterminé par des \textbf{pointeurs} stockés dans chaque objet
+(et non par des indices de tableau).
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={draw, fill=blue!8, minimum width=1.8cm, minimum height=0.65cm,
+                 rounded corners=2pt}]
+  \node[node] (a) at (0,0) {4 $|$ \texttt{->}};
+  \node[node] (b) at (2.4,0) {1 $|$ \texttt{->}};
+  \node[node] (c) at (4.8,0) {7 $|$ \texttt{->}};
+  \node[node] (d) at (7.2,0) {3 $|$ \texttt{NIL}};
+  \draw[->] (a.east) -- (b.west);
+  \draw[->] (b.east) -- (c.west);
+  \draw[->] (c.east) -- (d.west);
+  \node[above=4pt of a, font=\tiny\itshape] {head};
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lll}
+\toprule
+\textbf{Opération} & \textbf{Temps} & \textbf{Remarque} \\
+\midrule
+\textsc{List-Search}$(L, k)$  & $O(n)$ & Parcours séquentiel \\
+\textsc{List-Insert}$(L, x)$  & $O(1)$ & Insertion en tête \\
+\textsc{List-Delete}$(L, x)$  & $O(1)$ & Si pointeur déjà connu (liste doublement chaînée) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Sentinelles :} un objet factice \texttt{L.nil} représente simultanément les extrémités
+de la liste, simplifiant les cas limites (pas de test \texttt{NULL}).
+
+\subsubsection{Exemple : inverser une liste en $\Theta(n)$ temps, $\Theta(1)$ espace}
+
+\begin{algorithm}[H]
+\caption{Reverse-List($L$)}
 \begin{algorithmic}[1]
-\Procedure{Reverse-List}{$L$}
-    \State $prev \gets \text{NIL}$
-    \State $curr \gets L.head$
-    \While{$curr \neq \text{NIL}$}
-        \State $next\_node \gets curr.next$
-        \State $curr.next \gets prev$       
-        \State $prev \gets curr$            
-        \State $curr \gets next\_node$      
-    \EndWhile
-    \State $L.head \gets prev$              
-\EndProcedure
+\State $prev \leftarrow \textsc{NIL}$
+\State $curr \leftarrow L.head$
+\While{$curr \ne \textsc{NIL}$}
+    \State $next \leftarrow curr.next$
+    \State $curr.next \leftarrow prev$   \AlgComment{inverser le lien}
+    \State $prev \leftarrow curr$
+    \State $curr \leftarrow next$
+\EndWhile
+\State $L.head \leftarrow prev$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Conclusion on Elementary Data Structures}
-Stacks, Queues, and Linked Lists are excellent for specific operations (like insertions and deletions which run in $\mathcal{O}(1)$ time), but they are inherently \textbf{bad at search} operations, as finding a specific element generally requires $\mathcal{O}(n)$ time.
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={draw, fill=blue!8, minimum width=0.8cm, minimum height=0.55cm}]
+  % Before
+  \node[left] at (-0.3, 0.9) {\small\textit{Avant :}};
+  \foreach \v/\i in {4/0, 1/1, 7/2, 3/3}{
+    \node[node] (\i) at (\i*1.2, 0.9) {\v};
+  }
+  \draw[->] (0.east)--(1.west); \draw[->] (1.east)--(2.west);
+  \draw[->] (2.east)--(3.west);
+  % After
+  \node[left] at (-0.3, 0) {\small\textit{Après :}};
+  \foreach \v/\i in {3/0, 7/1, 1/2, 4/3}{
+    \node[node] (\i r) at (\i*1.2, 0) {\v};
+  }
+  \draw[->] (0r.east)--(1r.west); \draw[->] (1r.east)--(2r.west);
+  \draw[->] (2r.east)--(3r.west);
+\end{tikzpicture}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Conclusion sur les structures élémentaires}
+
+\begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
+                  title={Forces et limites}]
+Piles, files et listes chaînées excellent pour les insertions/suppressions en $O(1)$,
+mais sont \textbf{mauvaises pour la recherche} ($O(n)$). Pour une recherche rapide, il
+faut des structures plus sophistiquées (arbres, tables de hachage).
+\end{tcolorbox}

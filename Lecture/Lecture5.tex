@@ -1,47 +1,121 @@
-\subsection{Matrix Multiplication}
-Given two $n \times n$ matrices $A$ and $B$, the product $C = A \cdot B$ has $c_{ij} = \sum_{k=1}^n a_{ik}b_{kj}$.
+\subsection{Multiplication de matrices}
 
-\subsubsection{Naive vs. Strassen's Algorithm}
-\begin{itemize}
-    \item \textbf{Naive Algorithm:} Three nested loops, resulting in $\Theta(n^3)$.
-    \item \textbf{Simple Divide-and-Conquer:} Splitting matrices into 4 sub-matrices of size $n/2$. 
-    $T(n) = 8T(n/2) + \Theta(n^2) = \Theta(n^3)$. No improvement.
-    \item \textbf{Strassen's Algorithm:} Uses algebraic tricks to compute only \textbf{7 multiplications} instead of 8.
-    \[ T(n) = 7T(n/2) + \Theta(n^2) \]
-    Using Master Theorem Case 1 ($\log_2 7 \approx 2.81$):
-    \[ \boxed{T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})} \]
-\end{itemize}
+\textbf{Problème :} étant données deux matrices $n \times n$ $A$ et $B$, calculer
+$C = A \cdot B$ où $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
 
-\subsection{Heaps and Heapsort}
-Heapsort combines the benefits of Merge Sort ($O(n \log n)$) and Insertion Sort (in-place).
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcll}
+\toprule
+\textbf{Algorithme} & \textbf{Récurrence} & \textbf{Complexité} & \textbf{Remarque} \\
+\midrule
+Naïf (3 boucles imbriquées)
+  & --- & $\Theta(n^3)$ & Référence \\
+D\&C simple (8 sous-problèmes)
+  & $T(n) = 8T(n/2) + \Theta(n^2)$
+  & $\Theta(n^3)$ & Pas d'amélioration \\
+\textbf{Strassen}
+  & $T(n) = 7T(n/2) + \Theta(n^2)$
+  & $\Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})$ & Mieux ! \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\subsubsection{Binary Heap Structure}
-A heap is an almost complete binary tree stored in an array.
-\begin{itemize}
-    \item \textbf{Root:} $A[1]$
-    \item \textbf{Max-Heap Property:} $A[\text{Parent}(i)] \ge A[i]$. The largest element is at the root.
-    \item \textbf{Height:} A heap of $n$ elements has height $\Theta(\log n)$.
-\end{itemize}
+L'idée de Strassen : utiliser des combinaisons algébriques astucieuses pour n'effectuer
+que \textbf{7 multiplications} de sous-matrices au lieu de 8, au prix de quelques additions
+supplémentaires (moins coûteuses).
 
-\subsubsection{Key Operations}
-\subsubsection{Max-Heapify}
-Maintains the heap property. If an element is smaller than its children, it "sinks" down the tree.
-\begin{itemize}
-    \item \textbf{Complexity:} $O(\log n)$.
-\end{itemize}
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Application du Master Theorem à Strassen}]
+$a=7$, $b=2$, $f(n)=\Theta(n^2)$, $n^{\log_2 7} \approx n^{2.81}$.\\
+Comme $f(n) = O(n^{\log_2 7 - \varepsilon})$ (cas~1) :
+$T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})$.
+\end{tcolorbox}
 
-\subsubsection{Build-Max-Heap}
-Converts an unordered array into a Max-Heap by calling \textit{Max-Heapify} on all non-leaf nodes.
-\begin{itemize}
-    \item \textbf{Complexity:} Although it makes $O(n)$ calls to a $\log n$ function, the tighter analysis shows it is \textbf{linear}.
-    \[ \boxed{T(n) = \Theta(n)} \]
-\end{itemize}
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Tas (\textit{Heaps}) et Heapsort}
 
+Le Heapsort combine les avantages du tri fusion ($O(n\log n)$) et du tri par insertion
+(tri \emph{en place}).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsubsection{Structure d'un tas binaire}
+
+Un \textbf{tas (max-heap)} est un arbre binaire \emph{presque complet} stocké dans un tableau.
+
+\begin{center}
+\begin{tikzpicture}[
+    level distance=1.1cm,
+    level 1/.style={sibling distance=3.5cm},
+    level 2/.style={sibling distance=1.8cm},
+    level 3/.style={sibling distance=1cm},
+    every node/.style={circle, draw, fill=blue!10,
+                       inner sep=1pt, minimum size=0.7cm, font=\small}
+]
+\node {16}
+  child { node {14}
+    child { node {8}
+      child { node {2} }
+      child { node {4} }
+    }
+    child { node {7}
+      child { node {1} }
+    }
+  }
+  child { node {10}
+    child { node {9} }
+    child { node {3} }
+  };
+\end{tikzpicture}
+
+\vspace{0.5em}
+\begin{tikzpicture}[font=\small]
+  \foreach \v/\i/\c in {
+    16/1/blue!15, 14/2/blue!10, 10/3/blue!10,
+    8/4/blue!5, 7/5/blue!5, 9/6/blue!5, 3/7/blue!5,
+    2/8/white, 4/9/white, 1/10/white}{
+    \node[draw, fill=\c, minimum width=0.75cm, minimum height=0.65cm] at (\i*0.85-0.5, 0) {\v};
+    \node[font=\tiny, gray] at (\i*0.85-0.5, -0.5) {\i};
+  }
+  \node[left] at (0.3, 0) {$A=$};
+\end{tikzpicture}
+\end{center}
+
+Pour un nœud à l'indice $i$ :
+\[
+  \textsc{Parent}(i) = \lfloor i/2 \rfloor, \quad
+  \textsc{Left}(i) = 2i, \quad
+  \textsc{Right}(i) = 2i+1.
+\]
+
+\textbf{Propriété max-heap :} $A[\textsc{Parent}(i)] \ge A[i]$ pour tout $i \ne$ racine.
+Le maximum est toujours à la racine $A[1]$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsubsection{Opérations clés}
+
+\paragraph{\textsc{Max-Heapify}$(A, i)$.}
+Restaure la propriété max-heap pour le sous-arbre enraciné en $i$, en supposant que
+les sous-arbres gauche et droit sont déjà des max-heaps. L'élément « coule » vers le bas.
+Complexité : $O(\log n)$ (hauteur du tas).
+
+\paragraph{\textsc{Build-Max-Heap}$(A)$.}
+Construit un max-heap à partir d'un tableau quelconque en appelant
+\textsc{Max-Heapify} sur tous les nœuds non-feuilles (de $\lfloor n/2 \rfloor$ jusqu'à 1).
+
+\begin{algorithm}[H]
+\caption{Build-Max-Heap($A$)}
 \begin{algorithmic}[1]
-\Function{Build-Max-Heap}{$A$}
-    \State $A.heap\_size \gets A.length$
-    \For{$i \gets \lfloor A.length/2 \rfloor$ \textbf{downto} $1$}
-        \State \Call{Max-Heapify}{$A, i$}
-    \EndFor
-\EndFunction
+\State $A.heap\_size \leftarrow A.length$
+\For{$i \leftarrow \lfloor A.length/2 \rfloor$ \textbf{downto} $1$}
+    \State \Call{Max-Heapify}{$A, i$}
+\EndFor
 \end{algorithmic}
+\end{algorithm}
+
+\begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
+                  title={Complexité de Build-Max-Heap}]
+Bien que l'on appelle $O(n)$ fois une fonction en $O(\log n)$, l'analyse fine
+(la majorité des nœuds ont une faible hauteur) donne :
+\[ \boxed{T_{\text{build}} = \Theta(n)} \]
+\end{tcolorbox}

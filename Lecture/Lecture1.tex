@@ -1,21 +1,66 @@
-
 \subsection{Qu'est-ce qu'un algorithme ?}
-Un algorithme est une procédure de calcul bien définie qui prend une ou plusieurs valeurs en \textbf{entrée} (input) et produit une ou plusieurs valeurs en \textbf{sortie} (output). C'est une séquence d'étapes de calcul transformant l'entrée en sortie.
 
-On distingue l'algorithme de la \textbf{structure de données}, qui est une méthode pour stocker et organiser l'information afin de faciliter son accès et sa modification.
+Un \textbf{algorithme} est une procédure de calcul bien définie qui prend une ou plusieurs
+valeurs en \textbf{entrée} (\textit{input}) et produit une ou plusieurs valeurs en
+\textbf{sortie} (\textit{output}) : c'est une séquence d'étapes transformant l'entrée en sortie.
 
-\subsection{Exemple introductif : La Somme Arithmétique}
-Le problème est de calculer la somme des entiers de 1 à $n$ : $\sum_{i=1}^{n} i$.
+On distingue l'algorithme de la \textbf{structure de données}, qui est une méthode pour
+stocker et organiser l'information afin de faciliter son accès et sa modification.
 
-\begin{itemize}
-    \item \textbf{Approche Naïve :} Une boucle qui additionne les nombres un par un.
-    \item \textbf{Approche Intelligente (Gauss) :} Utilisation de la formule fermée $\frac{n(n+1)}{2}$.
-\end{itemize}
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Exemple introductif : la somme arithmétique}
 
-\paragraph{Analyse comparative :}
-L'algorithme naïf effectue $n$ additions, sa complexité dépend linéairement de la taille de l'entrée. L'approche de Gauss effectue un nombre constant d'opérations (une multiplication, une addition, une division), quelle que soit la taille de $n$.
+\textbf{Problème :} calculer $\displaystyle S = \sum_{i=1}^{n} i$.
 
+\begin{center}
+\begin{tikzpicture}[>=Stealth]
+  % Naive box
+  \node[draw=keyred, fill=red!8, rounded corners, text width=5.5cm, align=center,
+        inner sep=8pt] (naive) {
+    \textbf{\textcolor{keyred}{Approche naïve}}\\[4pt]
+    Boucle : additionner $1 + 2 + \cdots + n$\\[4pt]
+    $n$ additions \;\;$\Rightarrow$\;\; $\Theta(n)$
+  };
+  % Smart box
+  \node[draw=keygreen, fill=green!8, rounded corners, text width=5.5cm, align=center,
+        inner sep=8pt, right=1.5cm of naive] (smart) {
+    \textbf{\textcolor{keygreen}{Approche de Gauss}}\\[4pt]
+    Formule fermée : $\dfrac{n(n+1)}{2}$\\[4pt]
+    3 opérations \;\;$\Rightarrow$\;\; $\Theta(1)$
+  };
+  \draw[->, thick, gray] (naive) -- node[above, font=\small\itshape]{vs.} (smart);
+\end{tikzpicture}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \subsection{Pourquoi l'efficacité compte ?}
-Un ordinateur lent exécutant un bon algorithme (ex: $O(1)$ ou $O(n \log n)$) finira par battre un ordinateur très puissant exécutant un mauvais algorithme (ex: $O(n^2)$) lorsque la taille de l'entrée $n$ devient suffisamment grande.
 
-\textbf{Conclusion :} La performance asymptotique (le comportement quand $n \to \infty$) est plus déterminante que les constantes multiplicatives liées au matériel.
+Un ordinateur \emph{lent} exécutant un bon algorithme finira toujours par battre un
+ordinateur \emph{rapide} exécutant un mauvais algorithme, dès que la taille $n$ de
+l'entrée devient suffisamment grande.
+
+\begin{center}
+\begin{tikzpicture}
+  \begin{scope}
+    \draw[->] (0,0) -- (5.5,0) node[right] {$n$};
+    \draw[->] (0,0) -- (0,4.2) node[above] {temps};
+    % O(n^2)
+    \draw[keyred, thick, domain=0:2.0, samples=60]
+          plot (\x, {0.4*\x*\x}) node[right] {$O(n^2)$};
+    % O(n log n)
+    \draw[keyblue, thick, domain=0:5, samples=100]
+          plot (\x, {0.35*\x*(ln(\x+1)/ln(2)+0.1)}) node[right] {$O(n\log n)$};
+    % O(n)
+    \draw[keygreen, thick, domain=0:5, samples=60]
+          plot (\x, {0.4*\x}) node[right] {$O(n)$};
+    % O(1)
+    \draw[orange, thick] (0,0.3) -- (5,0.3) node[right] {$O(1)$};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
+                  title={Conclusion}]
+La \textbf{performance asymptotique} (comportement quand $n \to \infty$) est plus
+déterminante que les constantes multiplicatives liées au matériel.
+\end{tcolorbox}

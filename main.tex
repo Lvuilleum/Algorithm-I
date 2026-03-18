@@ -1,47 +1,109 @@
 \documentclass[a4paper,11pt]{article}
+
+% ─── Encoding & Language ────────────────────────────────────────────────────
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+
+% ─── Layout ─────────────────────────────────────────────────────────────────
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{parskip}
+\usepackage{enumitem}
+
+% ─── Math ────────────────────────────────────────────────────────────────────
 \usepackage{amsmath, amssymb, amsthm}
+
+% ─── Algorithms ──────────────────────────────────────────────────────────────
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{geometry}
-\usepackage{hyperref}
-\usepackage{xcolor}
+\algrenewcommand\algorithmicindent{1.5em}
+\newcommand{\AlgComment}[1]{\hfill\textcolor{gray!70!black}{\textit{// #1}}}
+
+% ─── Graphics & Diagrams ─────────────────────────────────────────────────────
+\usepackage{tikz}
+\usetikzlibrary{trees, positioning, arrows.meta, shapes.geometric, calc, decorations.pathreplacing}
+
+% ─── Tables ──────────────────────────────────────────────────────────────────
 \usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
 
-
-\geometry{hmargin=2.5cm,vmargin=2.5cm}
-
-% Couleurs pour le code et les mises en valeur
-\definecolor{codegreen}{rgb}{0,0.6,0}
+% ─── Colors ──────────────────────────────────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{keyblue}{RGB}{30, 80, 160}
+\definecolor{lightblue}{RGB}{220, 235, 255}
+\definecolor{keygreen}{RGB}{20, 130, 60}
+\definecolor{lightgreen}{RGB}{220, 245, 225}
+\definecolor{keyred}{RGB}{180, 30, 30}
+\definecolor{lightyellow}{RGB}{255, 252, 220}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
-\title{Algorithme}
-\author{liam Vuilleumier}
-\date{2026}
+% ─── Boxes & Frames ──────────────────────────────────────────────────────────
+\usepackage{mdframed}
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems, skins, breakable}
 
+% ─── Hyperlinks ──────────────────────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=keyblue, urlcolor=keyblue}
 
+% ─── Custom theorem environments ─────────────────────────────────────────────
+\newtcbtheorem[number within=section]{definition}{Définition}{
+  colback=lightblue, colframe=keyblue,
+  fonttitle=\bfseries, breakable
+}{def}
+
+\newtcbtheorem[number within=section]{theorem}{Théorème}{
+  colback=lightgreen, colframe=keygreen,
+  fonttitle=\bfseries, breakable
+}{thm}
+
+\newtcbtheorem[number within=section]{remark}{Point Clé}{
+  colback=lightyellow, colframe=orange!70!black,
+  fonttitle=\bfseries, breakable
+}{rem}
+
+\newtcbtheorem[number within=section]{complexity}{Complexité}{
+  colback=gray!10, colframe=gray!60,
+  fonttitle=\bfseries, breakable
+}{cpl}
+
+% ─── Metadata ────────────────────────────────────────────────────────────────
+\title{\textbf{Algorithmique}\\[0.5em]
+       \large Résumé du cours BA4 -- EPFL\\
+       Cours de Ola Svensson}
+\author{Liam Vuilleumier}
+\date{Printemps 2026}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \begin{document}
 \maketitle
-\section{Introduction}
-Short resume of the course algorithm from EPFL BA4, course given by Ola Svenson 
+\tableofcontents
+\newpage
 
-\section{Lecture 1 : Introduction}
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Lecture 1 : Introduction aux Algorithmes}
 \input{Lecture/Lecture1}
-\section{Resume Lecture 2}
+
+\section{Lecture 2 : Tri et Analyse de Complexité}
 \input{Lecture/Lecture2}
-\section{Lecture 3 : Diviser pour Régner (Merge Sort)}
+
+\section{Lecture 3 : Diviser pour Régner \& Tri Fusion}
 \input{Lecture/Lecture3}
-\section{resume lecture 4 : Analyse et Maximum Subarray}
-\input{Lecture/lecture4}
-\section{resume lecture 5 : Algorithmes Divide-and-Conquer \& Heaps}
+
+\section{Lecture 4 : Analyse des Récurrences \& Sous-tableau Maximum}
+\input{Lecture/Lecture4}
+
+\section{Lecture 5 : Multiplication de Matrices \& Tas}
 \input{Lecture/Lecture5}
-\section{Lecture 6: Matrix Multiplication and Heaps}
+
+\section{Lecture 6 : Heapsort \& Files de Priorité}
 \input{Lecture/Lecture6}
-\section{Resume lecture 7: Elementary Data Structures}
+
+\section{Lecture 7 : Structures de Données Élémentaires}
 \input{Lecture/Lecture7}
-\section{Resume lectue 8}
+
+\section{Lecture 8 : Arbres Binaires de Recherche \& Programmation Dynamique}
 \input{Lecture/Lecture8}
+
 \end{document}

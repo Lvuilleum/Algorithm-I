@@ -1,45 +1,89 @@
-\section{Lecture 2 : Tri et Analyse de Complexité}
+\subsection{Le problème du tri}
 
-\subsection{Le Problème du Tri}
-\textbf{Entrée :} Une séquence de $n$ nombres $\langle a_1, a_2, \dots, a_n \rangle$. \\
-\textbf{Sortie :} Une permutation $\langle a'_1, a'_2, \dots, a'_n \rangle$ de la séquence d'entrée telle que $a'_1 \le a'_2 \le \dots \le a'_n$.
+\textbf{Entrée :} une séquence de $n$ nombres $\langle a_1, a_2, \dots, a_n \rangle$.\\
+\textbf{Sortie :} une permutation $\langle a'_1, a'_2, \dots, a'_n \rangle$ telle que
+$a'_1 \le a'_2 \le \dots \le a'_n$.
 
-\subsection{Tri par Insertion (Insertion Sort)}
-Le tri par insertion fonctionne comme le tri d'une main de cartes à jouer. On parcourt les éléments un par un et on insère chaque nouvel élément à sa place correcte parmi ceux déjà triés (à gauche).
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Tri par insertion (\textit{Insertion Sort})}
 
-\begin{algorithm}
-\caption{Insertion-Sort(A)}
+L'idée est celle du tri d'une main de cartes : on parcourt les éléments un par un et on
+insère chaque nouvel élément à sa place correcte parmi ceux déjà triés.
+
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  % Array cells
+  \foreach \val/\idx in {5/1,2/2,4/3,6/4,1/5,3/6}{
+    \node[draw, minimum width=0.9cm, minimum height=0.7cm,
+          fill=blue!8] at (\idx*1.0-0.5, 0) {\val};
+    \node[font=\tiny, gray] at (\idx*1.0-0.5, -0.55) {\idx};
+  }
+  % Arrow showing "key"
+  \draw[->, keyred, thick] (2.5, -0.9) -- (2.5, -0.4)
+        node[midway, right=2pt, keyred] {\textit{key}};
+  % Already sorted bracket
+  \draw[decorate, decoration={brace,amplitude=5pt}, keygreen]
+        (0.05, 0.38) -- (1.45, 0.38)
+        node[midway, above=5pt, keygreen] {trié};
+\end{tikzpicture}
+\end{center}
+
+\begin{algorithm}[H]
+\caption{Insertion-Sort($A$)}
 \begin{algorithmic}[1]
-\For{$j = 2$ to $A.length$}
-    \State $key = A[j]$
-    \State $i = j - 1$
-    \While{$i > 0$ and $A[i] > key$}
-        \State $A[i+1] = A[i]$ 
-        \State $i = i - 1$
+\For{$j = 2$ \textbf{to} $A.length$}
+    \State $key \leftarrow A[j]$  \AlgComment{élément à insérer}
+    \State $i \leftarrow j - 1$
+    \While{$i > 0$ \textbf{and} $A[i] > key$}
+        \State $A[i+1] \leftarrow A[i]$  \AlgComment{décaler vers la droite}
+        \State $i \leftarrow i - 1$
     \EndWhile
-    \State $A[i+1] = key$ 
+    \State $A[i+1] \leftarrow key$  \AlgComment{insérer à la bonne place}
 \EndFor
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Preuve de Correction : Invariant de Boucle}
-Pour prouver qu'un algorithme itératif est correct, on utilise un \textbf{invariant de boucle}. C'est une propriété qui doit être vraie à trois moments clés :
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Preuve de correction : invariant de boucle}
+
+Pour prouver qu'un algorithme itératif est correct, on utilise un \textbf{invariant de
+boucle}, une propriété vérifiée à trois moments clés :
+
 \begin{enumerate}
-    \item \textbf{Initialisation :} Vraie avant la première itération.
-    \item \textbf{Conservation (Maintenance) :} Si elle est vraie avant une itération, elle reste vraie avant la suivante.
-    \item \textbf{Terminaison :} À la fin de la boucle, l'invariant fournit la propriété utile pour prouver la correction.
+  \item \textbf{Initialisation} : vraie avant la première itération.
+  \item \textbf{Conservation} : si vraie avant une itération, reste vraie avant la suivante.
+  \item \textbf{Terminaison} : à la fin de la boucle, l'invariant prouve la correction.
 \end{enumerate}
 
-\textbf{Application au Tri par Insertion :}
-\textit{Invariant :} Au début de chaque itération de la boucle `for` indexée par $j$, le sous-tableau $A[1 \dots j-1]$ contient les éléments qui étaient initialement dans $A[1 \dots j-1]$, mais triés.
+\textbf{Invariant pour le tri par insertion :} au début de chaque itération $j$, le
+sous-tableau $A[1 \ldots j-1]$ contient les éléments initialement en $A[1 \ldots j-1]$,
+\emph{mais triés}.
 
-\subsection{Analyse de Complexité (Modèle RAM)}
-Nous utilisons le modèle \textbf{Random-Access Machine (RAM)} où chaque instruction simple (arithmétique, accès mémoire, test) prend un temps constant.
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Analyse de complexité (modèle RAM)}
 
-\begin{itemize}
-    \item \textbf{Meilleur cas (Best case) :} Le tableau est déjà trié. La boucle `while` ne s'exécute jamais. Complexité : $\Theta(n)$.
-    \item \textbf{Pire cas (Worst case) :} Le tableau est trié en ordre inverse. La boucle `while` s'exécute $j-1$ fois pour chaque $j$.
-    \[ T(n) = \sum_{j=2}^{n} \Theta(j) = \Theta(n^2) \]
-\end{itemize}
+On utilise le modèle \textbf{Random-Access Machine (RAM)} : chaque instruction simple
+(arithmétique, accès mémoire, test) prend un temps constant.
 
-Nous nous concentrons généralement sur le \textbf{pire cas} car il fournit une garantie supérieure sur le temps d'exécution.
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lll}
+\toprule
+\textbf{Cas} & \textbf{Condition} & \textbf{Complexité} \\
+\midrule
+Meilleur cas & Tableau déjà trié (while ne s'exécute jamais) & $\Theta(n)$ \\
+Pire cas     & Tableau trié en ordre inverse & $\Theta(n^2)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Calcul du pire cas :}
+\[
+  T(n) = \sum_{j=2}^{n} (j-1) = \frac{n(n-1)}{2} = \Theta(n^2)
+\]
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Pourquoi se concentrer sur le pire cas ?}]
+Il fournit une \textbf{garantie supérieure} sur le temps d'exécution, valable pour toute
+entrée possible. C'est la référence standard en analyse d'algorithmes.
+\end{tcolorbox}
