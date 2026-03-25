@@ -9,7 +9,6 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{parskip}
 \usepackage{enumitem}
-
 % ─── Math ────────────────────────────────────────────────────────────────────
 \usepackage{amsmath, amssymb, amsthm}
 
@@ -27,7 +26,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{multirow}
-
+\usepackage[table]{xcolor} 
 % ─── Colors ──────────────────────────────────────────────────────────────────
 \usepackage{xcolor}
 \definecolor{keyblue}{RGB}{30, 80, 160}
@@ -67,6 +66,8 @@
   colback=gray!10, colframe=gray!60,
   fonttitle=\bfseries, breakable
 }{cpl}
+
+\DeclareMathOperator{\depth}{depth}
 
 % ─── Metadata ────────────────────────────────────────────────────────────────
 \title{\textbf{Algorithmique}\\[0.5em]
@@ -112,5 +113,7 @@
 \section{Lecture 10 : DP – Plus Longue Sous-Séquence Commune}
 \input{Lecture/Lecture10}
 
+\section{Lecture 11 : DP – Arbres Binaires de Recherche Optimaux}
+\input{Lecture/Lecture11}
 
 \end{document}
