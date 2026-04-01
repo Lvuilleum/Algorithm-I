@@ -1,0 +1,218 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 13 : Graphes – Théorèmes DFS et Tri Topologique
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Théorème des parenthèses}
+
+Les horodatages DFS ont une structure emboîtée stricte :
+
+\begin{theorem}{Théorème des parenthèses}{parenthesis}
+Pour tous sommets $u$ et $v$, exactement l'une des trois situations suivantes se produit :
+\begin{enumerate}
+  \item Les intervalles $[u.d,\, u.f]$ et $[v.d,\, v.f]$ sont \textbf{disjoints}, et
+        ni $u$ ni $v$ n'est ancêtre de l'autre.
+  \item $[v.d,\, v.f] \subset [u.d,\, u.f]$ (i.e.\ $u.d < v.d < v.f < u.f$)
+        et $v$ est un \textbf{descendant} de $u$.
+  \item $[u.d,\, u.f] \subset [v.d,\, v.f]$ (i.e.\ $v.d < u.d < u.f < v.f$)
+        et $u$ est un \textbf{descendant} de $v$.
+\end{enumerate}
+\end{theorem}
+
+\textbf{Illustration.} Sur l'exemple de Lecture~12 ($b$: 1/12, $a$: 2/7, $h$: 3/4,
+$g$: 5/6, $c$: 8/11, $d$: 9/10, $e$: 13/16, $f$: 14/15) :
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth]
+  % Timeline
+  \draw[->] (0,0) -- (17.5,0) node[right] {temps};
+  \foreach \t in {1,...,16}{
+    \draw (\t, 0.08) -- (\t, -0.08);
+    \node[below, font=\tiny] at (\t, -0.1) {\t};
+  }
+  % Intervals
+  \foreach \label/\s/\e/\y/\col in {
+    $b$/1/12/1.8/blue!30,
+    $a$/2/7/1.2/green!30,
+    $h$/3/4/0.6/orange!30,
+    $g$/5/6/0.6/orange!30,
+    $c$/8/11/1.2/green!30,
+    $d$/9/10/0.6/orange!30,
+    $e$/13/16/1.2/blue!20,
+    $f$/14/15/0.6/orange!30}{
+    \draw[fill=\col, draw=gray, rounded corners=1pt]
+          (\s, \y-0.25) rectangle (\e, \y+0.25);
+    \node[font=\tiny\bfseries] at ({(\s+\e)/2}, \y) {\label};
+  }
+\end{tikzpicture}
+\end{center}
+
+On voit que les intervalles sont soit imbriqués (ancêtre/descendant), soit disjoints
+(sans relation de descendance). Ils ne se croisent jamais partiellement.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Théorème du chemin blanc}
+
+\begin{theorem}{Théorème du chemin blanc}{whitepath}
+Dans une forêt DFS d'un graphe $G$, le sommet $v$ est un \textbf{descendant} de $u$
+si et seulement qu'au temps $u.d$ (quand $u$ vient d'être découvert), il existe un
+chemin de $u$ à $v$ constitué \textbf{uniquement de sommets BLANCS}
+(non encore découverts), à l'exception de $u$ lui-même qui vient d'être coloré GRIS.
+\end{theorem}
+
+Ce théorème caractérise entièrement la relation de descendance dans la forêt DFS :
+$v$ sera dans le sous-arbre de $u$ précisément si un tel chemin blanc existe
+au moment de la découverte de $u$.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Tri Topologique}
+\addcontentsline{toc}{subsection}{Tri Topologique}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Définition}
+
+\begin{definition}{Tri topologique}{topo}
+\textbf{Entrée :} un graphe orienté acyclique (DAG) $G = (V, E)$.
+
+\textbf{Sortie :} un ordre linéaire des sommets tel que pour toute arête
+$(u, v) \in E$, $u$ apparaît avant $v$ dans l'ordre.
+\end{definition}
+
+\textbf{Exemple motivant :} l'ordre dans lequel s'habiller le matin.
+Si l'on doit mettre les chaussettes avant les chaussures, et les sous-vêtements
+avant le pantalon, le tri topologique donne un ordre compatible avec toutes ces
+contraintes.
+
+\begin{remark}{DAG et applicabilité}{dagrem}
+Un tri topologique n'existe que si le graphe est \textbf{acyclique} (DAG).
+En présence d'un cycle, aucun ordre linéaire ne peut satisfaire toutes les
+contraintes de précédence.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Caractérisation des DAG par DFS}
+
+\begin{theorem}{DAG $\Leftrightarrow$ pas d'arête arrière DFS}{daglem}
+Un graphe orienté $G$ est acyclique si et seulement si un DFS de $G$ ne produit
+\textbf{aucune arête arrière}.
+\end{theorem}
+
+\begin{proof}
+\textbf{Arête arrière $\Rightarrow$ cycle.}
+Supposons qu'il existe une arête arrière $(u, v)$. Alors $v$ est un ancêtre de $u$
+dans la forêt DFS, donc il existe un chemin de $v$ à $u$ dans $G$. L'arête arrière
+$(u, v)$ ferme ce chemin en un cycle.
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!10, minimum size=0.6cm, inner sep=1pt}]
+  \node[node] (v) at (1, 2) {$v$};
+  \node[node] (m) at (1, 1) {$\cdots$};
+  \node[node] (u) at (1, 0) {$u$};
+  \draw[->, keygreen, thick] (v) -- (m) node[midway, right, font=\tiny]{$T$};
+  \draw[->, keygreen, thick] (m) -- (u) node[midway, right, font=\tiny]{$T$};
+  \draw[->, keyred, thick, bend right=50] (u) to node[left, font=\tiny]{$B$} (v);
+  \node[keyred, font=\tiny] at (2.5, 1) {cycle !};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Cycle $\Rightarrow$ arête arrière.}
+Soit $C$ un cycle dans $G$ et $v$ le premier sommet de $C$ découvert par DFS.
+Soit $(u, v)$ l'arête précédant $v$ dans le cycle. Au temps $v.d$, les sommets
+de $C$ forment un chemin blanc de $v$ à $u$. Par le théorème du chemin blanc,
+$u$ devient descendant de $v$, donc l'arête $(u, v)$ est une arête arrière.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithme}
+
+\begin{algorithm}[H]
+\caption{Topological-Sort($G$)}
+\begin{algorithmic}[1]
+\State Appeler \textsc{DFS}($G$) pour calculer les temps de fin $v.f$ pour tout $v$
+\State \Return les sommets dans l'ordre \textbf{décroissant} des temps de fin $v.f$
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Implémentation efficace :} il n'est pas nécessaire de trier explicitement.
+On peut insérer chaque sommet en \emph{tête} d'une liste chaînée au moment
+où il est terminé (coloré NOIR). À la fin du DFS, la liste contient les sommets
+dans l'ordre topologique.
+
+\begin{complexity}{Topological-Sort}{topocplx}
+\textbf{Complexité : $\Theta(V + E)$} — identique à celle du DFS.
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Preuve de correction}
+
+Il faut montrer que si $(u, v) \in E$ alors $v.f < u.f$ (ainsi $u$ apparaît avant
+$v$ dans l'ordre décroissant des temps de fin).
+
+Quand on explore l'arête $(u,v)$ lors du DFS, $u$ est GRIS. Trois cas pour $v$ :
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{cll}
+\toprule
+\textbf{Couleur de $v$} & \textbf{Conséquence} & \textbf{Résultat} \\
+\midrule
+GRIS & $v$ serait ancêtre de $u$ & Arête arrière $\Rightarrow$ cycle $\Rightarrow$ contradiction \\
+BLANC & $v$ devient descendant de $u$ & Par parenthèses : $u.d < v.d < v.f < u.f$ \\
+NOIR & $v$ déjà terminé, $u$ pas encore & Directement $v.f < u.f$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Dans tous les cas non contradictoires, on obtient bien $v.f < u.f$. \qed
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Exemple}
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!10, minimum size=0.75cm, inner sep=1pt}]
+  % Nodes with DFS timestamps
+  \node[node] (undies) at (0, 2)    {\small s-v}; \node[above=2pt] at (undies.north) {\tiny 1/8};
+  \node[node] (pants)  at (2, 2)    {\small pan}; \node[above=2pt] at (pants.north)  {\tiny 2/7};
+  \node[node] (belt)   at (4, 2)    {\small ceil};\node[above=2pt] at (belt.north)   {\tiny 3/6};
+  \node[node] (shirt)  at (0, 0)    {\small che}; \node[above=2pt] at (shirt.north)  {\tiny 9/12};
+  \node[node] (tie)    at (2, 0)    {\small crav};\node[above=2pt] at (tie.north)    {\tiny 10/11};
+  \node[node] (jacket) at (4, 0)    {\small vest};\node[above=2pt] at (jacket.north) {\tiny 13/14};
+  \node[node] (socks)  at (6, 1)    {\small chaus};\node[above=2pt] at (socks.north) {\tiny 15/16};
+  \node[node] (shoes)  at (5, -1)   {\small sou}; \node[above=2pt] at (shoes.north)  {\tiny 4/5};
+  \draw[->,thick] (undies)--(pants);
+  \draw[->,thick] (undies)--(shoes);
+  \draw[->,thick] (pants)--(belt);
+  \draw[->,thick] (pants)--(shoes);
+  \draw[->,thick] (belt)--(jacket);
+  \draw[->,thick] (shirt)--(belt);
+  \draw[->,thick] (shirt)--(tie);
+  \draw[->,thick] (tie)--(jacket);
+  \draw[->,thick] (socks)--(shoes);
+  % Topological order arrow
+  \node[draw=none, fill=none, keyred, font=\bfseries\small] at (3, -2)
+        {Ordre topo. : $f=16,15,14,12,11,8,7,6,5$};
+\end{tikzpicture}
+\end{center}
+
+L'ordre topologique (temps de fin décroissants) donne un ordre d'habillage
+valide : chaque vêtement apparaît après ceux qui doivent être mis avant lui.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Résumé de la lecture}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Points clés}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Théorème des parenthèses :} les intervalles $[u.d, u.f]$ sont soit
+        imbriqués, soit disjoints — jamais partiellement croisés.
+  \item \textbf{Théorème du chemin blanc :} $v$ est descendant de $u$ ssi il existe
+        un chemin blanc de $u$ à $v$ au temps $u.d$.
+  \item \textbf{DAG $\Leftrightarrow$ pas d'arête arrière :} outil pour détecter
+        les cycles.
+  \item \textbf{Tri topologique :} DFS + ordre décroissant des temps de fin.
+        Complexité $\Theta(V+E)$.
+\end{itemize}
+\end{tcolorbox}
