@@ -1,0 +1,310 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 14 : Composantes Fortement Connexes et Réseaux de Flot
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Composantes Fortement Connexes (SCC)}
+\addcontentsline{toc}{subsection}{Composantes Fortement Connexes}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Définition}
+
+\begin{definition}{Composante Fortement Connexe}{scc}
+Une \textbf{composante fortement connexe (SCC)} d'un graphe orienté
+$G = (V, E)$ est un ensemble \emph{maximal} de sommets $C \subseteq V$
+tel que pour tout $u, v \in C$, il existe un chemin de $u$ vers $v$
+\emph{et} un chemin de $v$ vers $u$ (on note $u \leadsto v$ et $v \leadsto u$).
+\end{definition}
+
+\textbf{Exemple :} sur un graphe à 10 sommets $\{a, b, c, d, e, f, g, h, i, j\}$,
+les SCC peuvent regrouper $\{a, b, e, f\}$, $\{c, d, h\}$, $\{g\}$, $\{i, j\}$
+selon les arêtes présentes. Un sous-ensemble qui n'est pas maximal, ou dans lequel
+deux sommets ne sont pas mutuellement atteignables, n'est pas une SCC.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Graphe des composantes}
+
+\begin{definition}{Graphe des composantes $G^{SCC}$}{gscc}
+Pour un graphe orienté $G = (V, E)$, le graphe des composantes
+$G^{SCC} = (V^{SCC}, E^{SCC})$ est défini par :
+\begin{itemize}[noitemsep]
+  \item $V^{SCC}$ contient un sommet pour chaque SCC de $G$.
+  \item $E^{SCC}$ contient une arête entre deux SCC s'il existe une arête
+        entre les SCC correspondantes dans $G$.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}{$G^{SCC}$ est un DAG}{sccdag}
+Le graphe des composantes $G^{SCC}$ est toujours un graphe orienté acyclique.
+\end{theorem}
+
+Ceci découle du fait que s'il existait un cycle dans $G^{SCC}$, toutes les SCC
+concernées formeraient une seule et même SCC, ce qui contredit leur définition.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithme de Kosaraju}
+
+\begin{algorithm}[H]
+\caption{SCC($G$)}
+\begin{algorithmic}[1]
+\State Appeler \textsc{DFS}($G$) pour calculer les temps de fin $u.f$ pour tout $u$
+\State Calculer le graphe transposé $G^T$   \AlgComment{inverser toutes les arêtes}
+\State Appeler \textsc{DFS}($G^T$) en traitant les sommets dans l'ordre
+       \textbf{décroissant} des $u.f$ calculés à l'étape 1
+\State \Return chaque arbre de la forêt DFS de l'étape 3 comme une SCC distincte
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Graphe transposé $G^T$ :}
+$G^T = (V, E^T)$ où $E^T = \{(u,v) : (v,u) \in E\}$ — toutes les arêtes sont
+renversées. $G^T$ se calcule en $\Theta(V + E)$ avec des listes d'adjacence, et
+$G$ et $G^T$ possèdent exactement les mêmes SCC.
+
+\begin{complexity}{SCC de Kosaraju}{scccplx}
+Chaque étape s'exécute en $\Theta(V + E)$, donc la
+\textbf{complexité totale est $\Theta(V + E)$}.
+\end{complexity}
+
+\subsubsection{Intuition de la correction}
+
+Le premier DFS ordonne les SCC en ordre topologique dans $G^{SCC}$ (qui est un DAG).
+Le second DFS sur $G^T$ part de la SCC de plus grand $u.f$, et dans $G^T$ les
+arêtes entre SCC sont renversées : on ne peut donc pas « s'échapper » vers une autre
+SCC. Chaque arbre du second DFS est exactement une SCC.
+
+\subsubsection{Exemple}
+
+Sur un graphe à 10 sommets, le premier DFS (sur $G$) produit les horodatages
+suivants (en lisant les slides : $d$: 1/12, $i$: 10/11, $h$: 2/5, $c$: 3/4,
+$j$: 7/8, $e$: 6/9, $a$: 14/19, $b$: 15/16, $f$: 17/18, $g$: 13/20).
+
+Le second DFS sur $G^T$ part de $g$ ($f=20$), puis $a$ ($f=19$), etc., et
+chaque arbre formé correspond à une SCC :
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    scc/.style={draw, rounded corners, fill=blue!10,
+                minimum width=1.4cm, minimum height=0.6cm, inner sep=3pt}]
+  \node[scc, fill=green!15]  (s1) at (0, 0)   {$\{a,b,f,g\}$};
+  \node[scc, fill=orange!15] (s2) at (3, 0)   {$\{d,i\}$};
+  \node[scc, fill=blue!10]   (s3) at (1.5,-1.2){$\{c,h\}$};
+  \node[scc, fill=yellow!30] (s4) at (3,-1.2)  {$\{e,j\}$};
+  \draw[->, thick] (s1) -- (s2);
+  \draw[->, thick] (s1) -- (s3);
+  \draw[->, thick] (s2) -- (s4);
+  \draw[->, thick] (s3) -- (s4);
+  \node[below=4pt, keyred, font=\small] at (1.5, -2) {$G^{SCC}$ (DAG)};
+\end{tikzpicture}
+\end{center}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Réseaux de Flot}
+\addcontentsline{toc}{subsection}{Réseaux de Flot}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Définition}
+
+\begin{definition}{Réseau de flot}{flownet}
+Un \textbf{réseau de flot} est un graphe orienté $G = (V, E)$ où :
+\begin{itemize}[noitemsep]
+  \item Chaque arête $(u,v)$ a une \textbf{capacité} $c(u,v) \ge 0$
+        (et $c(u,v) = 0$ si $(u,v) \notin E$).
+  \item Il y a une \textbf{source} $s$ et un \textbf{puits} $t$.
+  \item On suppose l'absence d'arêtes anti-parallèles (sans perte de généralité).
+\end{itemize}
+\end{definition}
+
+\textbf{Exemple :} transport de fromage de Gruyère ($s$) à Lausanne ($t$) via
+des villes intermédiaires, chaque route ayant une capacité maximale.
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.7cm, inner sep=1pt}]
+  \node[node, fill=green!20] (s)  at (0, 1)   {$s$};
+  \node[node]                (v1) at (2, 2)   {$v_1$};
+  \node[node]                (v2) at (2, 0)   {$v_2$};
+  \node[node]                (v3) at (4, 2)   {$v_3$};
+  \node[node]                (v4) at (4, 0)   {$v_4$};
+  \node[node, fill=red!20]   (t)  at (6, 1)   {$t$};
+  \draw[->, thick] (s)  -- node[above, font=\tiny]{3} (v1);
+  \draw[->, thick] (s)  -- node[below, font=\tiny]{2} (v2);
+  \draw[->, thick] (v1) -- node[above, font=\tiny]{2} (v3);
+  \draw[->, thick] (v1) -- node[right, font=\tiny]{1} (v2);
+  \draw[->, thick] (v2) -- node[below, font=\tiny]{3} (v4);
+  \draw[->, thick] (v2) -- node[above, font=\tiny]{3} (v3);
+  \draw[->, thick] (v3) -- node[above, font=\tiny]{3} (t);
+  \draw[->, thick] (v4) -- node[below, font=\tiny]{2} (t);
+  \draw[->, thick] (v3) -- node[right, font=\tiny]{1} (v4);
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Suppression des arêtes anti-parallèles}
+
+Si le graphe contient $(u,v)$ et $(v,u)$, on remplace $(u,v)$ par deux arêtes
+$(u, v')$ et $(v', v)$ avec $c(u,v') = c(v',v) = c(u,v)$, en introduisant un
+sommet fictif $v'$. On répète pour chaque paire anti-parallèle ($O(E)$ fois).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Définition d'un flot}
+
+\begin{definition}{Flot}{flow}
+Un \textbf{flot} est une fonction $f : V \times V \to \mathbb{R}$ vérifiant :
+
+\textbf{Contrainte de capacité :} $\forall\, u, v \in V$,
+\[
+  0 \le f(u,v) \le c(u,v).
+\]
+
+\textbf{Conservation du flot :} $\forall\, u \in V \setminus \{s, t\}$,
+\[
+  \underbrace{\sum_{v \in V} f(v,u)}_{\text{flot entrant}} =
+  \underbrace{\sum_{v \in V} f(u,v)}_{\text{flot sortant}}.
+\]
+\end{definition}
+
+La \textbf{valeur} du flot $f$ est :
+\[
+  |f| = \sum_{v \in V} f(s,v) - \sum_{v \in V} f(v,s)
+       = \text{flot total sortant de la source}.
+\]
+
+\textbf{Exemple} (réseau ci-dessus, flot de valeur $|f| = 4$) :
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.7cm, inner sep=1pt}]
+  \node[node, fill=green!20] (s)  at (0, 1)   {$s$};
+  \node[node]                (v1) at (2, 2)   {$v_1$};
+  \node[node]                (v2) at (2, 0)   {$v_2$};
+  \node[node]                (v3) at (4, 2)   {$v_3$};
+  \node[node]                (v4) at (4, 0)   {$v_4$};
+  \node[node, fill=red!20]   (t)  at (6, 1)   {$t$};
+  \draw[->, thick, keyblue] (s)  -- node[above, font=\tiny]{2/3} (v1);
+  \draw[->, thick, keyblue] (s)  -- node[below, font=\tiny]{2/2} (v2);
+  \draw[->, thick, keyblue] (v1) -- node[above, font=\tiny]{2/2} (v3);
+  \draw[->, thick, keyblue] (v1) -- node[right, font=\tiny]{0/1} (v2);
+  \draw[->, thick, keyblue] (v2) -- node[below, font=\tiny]{1/3} (v4);
+  \draw[->, thick, keyblue] (v2) -- node[above, font=\tiny]{1/3} (v3);
+  \draw[->, thick, keyblue] (v3) -- node[above, font=\tiny]{3/3} (t);
+  \draw[->, thick, keyblue] (v4) -- node[below, font=\tiny]{1/2} (t);
+  \draw[->, thick, keyblue] (v3) -- node[right, font=\tiny]{0/1} (v4);
+  \node[below=4pt, font=\small] at (3, -0.8) {Flot $f/c$, valeur $|f|=4$};
+\end{tikzpicture}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Réseau résiduel}
+
+\begin{definition}{Réseau résiduel $G_f$}{residual}
+Étant donné un flot $f$ dans $G = (V, E)$, la \textbf{capacité résiduelle} est :
+\[
+  c_f(u,v) =
+  \begin{cases}
+    c(u,v) - f(u,v) & \text{si } (u,v) \in E \quad (\text{capacité restante})\\
+    f(v,u)          & \text{si } (v,u) \in E \quad (\text{flot annulable}) \\
+    0               & \text{sinon.}
+  \end{cases}
+\]
+Le \textbf{réseau résiduel} est $G_f = (V, E_f)$ où
+$E_f = \{(u,v) \in V \times V : c_f(u,v) > 0\}$.
+\end{definition}
+
+\begin{remark}{Rôle des arêtes résiduelles inversées}{residualinv}
+Les arêtes inversées $(v,u)$ dans $G_f$ représentent la possibilité de
+\emph{réduire} le flot sur $(u,v)$, ce qui équivaut à le réacheminer ailleurs.
+C'est ce mécanisme qui permet à l'algorithme de corriger de mauvais choix initiaux.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Méthode de Ford-Fulkerson}
+
+\begin{algorithm}[H]
+\caption{Ford-Fulkerson-Method($G$, $s$, $t$)}
+\begin{algorithmic}[1]
+\State Initialiser $f(u,v) \leftarrow 0$ pour tout $(u,v)$
+\While{il existe un \textbf{chemin augmentant} $p$ de $s$ à $t$ dans $G_f$}
+    \State \textbf{Augmenter} le flot $f$ le long de $p$
+\EndWhile
+\State \Return $f$
+\end{algorithmic}
+\end{algorithm}
+
+Un \textbf{chemin augmentant} est un chemin simple de $s$ à $t$ dans le réseau
+résiduel $G_f$. On envoie un flot égal à la \textbf{capacité résiduelle minimale}
+sur ce chemin :
+\[
+  c_f(p) = \min_{(u,v) \in p} c_f(u,v).
+\]
+
+Pour chaque arête $(u,v) \in p$, le flot est mis à jour par :
+$f(u,v) \leftarrow f(u,v) + c_f(p) - c_f(v,u)$ (en tenant compte des arêtes
+inversées).
+
+\subsubsection{Exemple pas à pas}
+
+Graphe en losange avec une arête centrale de capacité 1 (les deux voies de capacité 1
+chacune) :
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.6cm, inner sep=1pt}]
+  % Étape 1 : flot initial 0
+  \begin{scope}[xshift=0cm]
+    \node[node, fill=green!20] (s1) at (0,1)  {$s$};
+    \node[node]                (m1) at (1.4,1){};
+    \node[node, fill=red!20]   (t1) at (2.8,1){$t$};
+    \draw[->,thick] (s1) -- node[above,font=\tiny]{0/1} (m1);
+    \draw[->,thick] (m1) -- node[above,font=\tiny]{0/1} (t1);
+    \draw[->,thick] (s1) to[bend right=30] node[below,font=\tiny]{0/1} (m1);
+    \draw[->,thick] (m1) to[bend right=30] node[below,font=\tiny]{0/1} (t1);
+    \node[below=6pt,font=\tiny] at (1.4,0.4) {flot initial};
+  \end{scope}
+  % Étape 2 : après 1er chemin augmentant
+  \begin{scope}[xshift=4cm]
+    \node[node, fill=green!20] (s2) at (0,1)  {$s$};
+    \node[node]                (m2) at (1.4,1){};
+    \node[node, fill=red!20]   (t2) at (2.8,1){$t$};
+    \draw[->,thick,keygreen] (s2) -- node[above,font=\tiny]{1/1} (m2);
+    \draw[->,thick,keygreen] (m2) -- node[above,font=\tiny]{1/1} (t2);
+    \draw[->,thick] (s2) to[bend right=30] node[below,font=\tiny]{0/1} (m2);
+    \draw[->,thick] (m2) to[bend right=30] node[below,font=\tiny]{0/1} (t2);
+    \node[below=6pt,font=\tiny] at (1.4,0.4) {$|f|=1$};
+  \end{scope}
+  % Étape 3 : chemin inférieur, flot=2
+  \begin{scope}[xshift=8cm]
+    \node[node, fill=green!20] (s3) at (0,1)  {$s$};
+    \node[node]                (m3) at (1.4,1){};
+    \node[node, fill=red!20]   (t3) at (2.8,1){$t$};
+    \draw[->,thick,keygreen] (s3) -- node[above,font=\tiny]{1/1} (m3);
+    \draw[->,thick,keygreen] (m3) -- node[above,font=\tiny]{1/1} (t3);
+    \draw[->,thick,keyblue] (s3) to[bend right=30] node[below,font=\tiny]{1/1} (m3);
+    \draw[->,thick,keyblue] (m3) to[bend right=30] node[below,font=\tiny]{1/1} (t3);
+    \node[below=6pt,font=\tiny] at (1.4,0.4) {$|f|=2$ (optimal)};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\textbf{Cas où les arêtes inversées sont nécessaires.} Sans elles, un mauvais
+premier choix (chemin passant par l'arête centrale) bloquerait à $|f|=1$ au lieu
+de 2. Le réseau résiduel permet de « défaire » ce choix via une arête retour.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Résumé de la lecture}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Points clés}]
+\begin{itemize}[noitemsep]
+  \item \textbf{SCC :} ensemble maximal de sommets mutuellement atteignables.
+  \item \textbf{$G^{SCC}$ est un DAG.}
+  \item \textbf{Kosaraju :} 2 DFS ($G$ puis $G^T$ dans l'ordre décroissant des $u.f$).
+        Complexité $\Theta(V+E)$.
+  \item \textbf{Réseau de flot :} contrainte de capacité $0 \le f(u,v) \le c(u,v)$
+        et conservation du flot en tout sommet $\ne s, t$.
+  \item \textbf{Réseau résiduel $G_f$ :} encode ce qu'on peut encore envoyer
+        (ou annuler) sur chaque arête.
+  \item \textbf{Ford-Fulkerson :} augmenter le long de chemins $s \leadsto t$ dans
+        $G_f$ jusqu'à épuisement.
+\end{itemize}
+\end{tcolorbox}
