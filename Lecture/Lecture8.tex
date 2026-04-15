@@ -1,12 +1,12 @@
 % ══════════════════════════════════════════════
-\subsection{Motivation : le jeu du devin}
+\subsection{Motivation: The Guessing Game}
 
-Ola pense à un entier entre 1 et 15. À chaque devinette, il répond
-\emph{correct}, \emph{plus petit} ou \emph{plus grand}.
+Ola is thinking of an integer between 1 and 15. For each guess, he answers
+\emph{correct}, \emph{smaller}, or \emph{larger}.
 
-\textbf{Stratégie optimale :} toujours deviner le milieu de l'intervalle restant.
-Cela garantit de trouver n'importe quel nombre en au plus $\lceil\log_2 15\rceil = 4$
-questions. Cette stratégie s'encode naturellement sous la forme d'un arbre :
+\textbf{Optimal strategy:} always guess the middle of the remaining interval.
+This guarantees finding any number in at most $\lceil\log_2 15\rceil = 4$
+questions. This strategy is naturally encoded as a tree:
 
 \begin{center}
 \begin{tikzpicture}[
@@ -42,17 +42,17 @@ questions. Cette stratégie s'encode naturellement sous la forme d'un arbre :
 \end{center}
 
 % ══════════════════════════════════════════════
-\subsection{Définition et propriété fondamentale}
+\subsection{Definition and Fundamental Property}
 
-\begin{definition}{Arbre binaire de recherche (ABR)}{bst}
-Un \textbf{ABR} est un arbre binaire $T$ où chaque nœud $x$ vérifie :
+\begin{definition}{Binary Search Tree (BST)}{bst}
+A \textbf{BST} is a binary tree $T$ where each node $x$ satisfies:
 \begin{itemize}[noitemsep]
-  \item Si $y$ est dans le \emph{sous-arbre gauche} de $x$ :
+  \item If $y$ is in the \emph{left subtree} of $x$:
         $y.\mathit{key} < x.\mathit{key}$.
-  \item Si $y$ est dans le \emph{sous-arbre droit} de $x$ :
+  \item If $y$ is in the \emph{right subtree} of $x$:
         $y.\mathit{key} \ge x.\mathit{key}$.
 \end{itemize}
-La \textbf{hauteur} $h$ est le nombre d'arêtes du plus long chemin racine–feuille.
+The \textbf{height} $h$ is the number of edges on the longest root–leaf path.
 \end{definition}
 
 \begin{center}
@@ -74,7 +74,7 @@ La \textbf{hauteur} $h$ est le nombre d'arêtes du plus long chemin racine–feu
         child { node {14} }
       };
     \node[draw=none, fill=none, below=0.1cm, keygreen] at (0,-2.9)
-          {Équilibré : $h = 2$, ops en $O(\log n)$};
+          {Balanced: $h = 2$, ops in $O(\log n)$};
   \end{scope}
   % Degenerate BST
   \begin{scope}[xshift=5.5cm,
@@ -92,20 +92,20 @@ La \textbf{hauteur} $h$ est le nombre d'arêtes du plus long chemin racine–feu
         }
       };
     \node[draw=none, fill=none, below=0.1cm, keyred] at (0.5,-2.9)
-          {Dégénéré : $h = n-1$, ops en $O(n)$};
+          {Degenerate: $h = n-1$, ops in $O(n)$};
   \end{scope}
 \end{tikzpicture}
 \end{center}
 
-\begin{complexity}{Toutes les opérations sur un ABR}{bstcplx}
-Recherche, insertion, suppression, min, max, successeur, prédécesseur :
-toutes en $O(h)$. Pour un arbre équilibré : $h = O(\log n)$.
+\begin{complexity}{All operations on a BST}{bstcplx}
+Search, insertion, deletion, min, max, successor, predecessor:
+all in $O(h)$. For a balanced tree: $h = O(\log n)$.
 \end{complexity}
 
 % ══════════════════════════════════════════════
-\subsection{Requêtes sur un ABR}
+\subsection{Queries on a BST}
 
-\subsubsection{Recherche}
+\subsubsection{Search}
 
 \begin{algorithm}[H]
 \caption{BST-Search($T$, $k$)}
@@ -120,64 +120,64 @@ toutes en $O(h)$. Pour un arbre équilibré : $h = O(\log n)$.
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{Minimum, Maximum, Successeur}
+\subsubsection{Minimum, Maximum, Successor}
 
-\begin{theorem}{Localisation de min/max}{minmax}
+\begin{theorem}{Locating min/max}{minmax}
 \begin{itemize}[noitemsep]
-  \item Le \textbf{minimum} est le nœud le plus à \emph{gauche}.
-  \item Le \textbf{maximum} est le nœud le plus à \emph{droite}.
+  \item The \textbf{minimum} is the leftmost node.
+  \item The \textbf{maximum} is the rightmost node.
 \end{itemize}
 \end{theorem}
 
-Le \textbf{successeur} de $x$ (plus petite clé $> x.\mathit{key}$) se trouve :
+The \textbf{successor} of $x$ (smallest key $> x.\mathit{key}$) is found:
 \begin{enumerate}[noitemsep]
-  \item Si $x$ a un sous-arbre droit : c'est le \emph{minimum} du sous-arbre droit.
-  \item Sinon : remonter jusqu'au premier ancêtre $y$ tel que $x$ est dans le sous-arbre
-        \emph{gauche} de $y$.
+  \item If $x$ has a right subtree: it is the \emph{minimum} of the right subtree.
+  \item Otherwise: go up to the first ancestor $y$ such that $x$ is in the \emph{left} 
+        subtree of $y$.
 \end{enumerate}
 
 % ══════════════════════════════════════════════
-\subsection{Parcours d'un ABR}
+\subsection{BST Traversal}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{llll}
 \toprule
-\textbf{Parcours} & \textbf{Ordre} & \textbf{Résultat (ex.)} & \textbf{Utilité} \\
+\textbf{Traversal} & \textbf{Order} & \textbf{Result (ex.)} & \textbf{Utility} \\
 \midrule
-Infixe (inorder)    & gauche, racine, droite & $1,2,\ldots,n$ (trié !) & Tri \\
-Préfixe (preorder)  & racine, gauche, droite & racine en premier & Copie \\
-Postfixe (postorder)& gauche, droite, racine & racine en dernier & Suppression \\
+Inorder     & left, root, right & $1,2,\ldots,n$ (sorted!) & Sorting \\
+Preorder    & root, left, right & root first & Copying \\
+Postorder   & left, right, root & root last & Deletion \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\begin{remark}{Parcours infixe et tri}{inorder}
-Le parcours infixe d'un ABR produit toujours les clés en \textbf{ordre croissant}
-(propriété directe de la définition de l'ABR). Complexité : $\Theta(n)$.
+\begin{remark}{Inorder Traversal and Sorting}{inorder}
+The inorder traversal of a BST always produces keys in \textbf{increasing order}
+(a direct property of the BST definition). Complexity: $\Theta(n)$.
 \end{remark}
 
 % ══════════════════════════════════════════════
-\subsection{Modifications d'un ABR}
+\subsection{BST Modifications}
 
 \subsubsection{Insertion}
 
-Chercher $z.\mathit{key}$ jusqu'à atteindre \textsc{NIL}, puis insérer $z$ à cet endroit.
-Complexité : $O(h)$.
+Search for $z.\mathit{key}$ until reaching \textsc{NIL}, then insert $z$ at that position.
+Complexity: $O(h)$.
 
-\subsubsection{Suppression}
+\subsubsection{Deletion}
 
-Trois cas selon le nombre d'enfants du nœud $z$ à supprimer :
+Three cases according to the number of children of the node $z$ to be deleted:
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth,
     node/.style={circle, draw, fill=blue!10,
-                 inner sep=1pt, minimum size=0.6cm}]
+                  inner sep=1pt, minimum size=0.6cm}]
   % Case 1: no children
   \begin{scope}
     \node[node, fill=red!20] (z1) at (0,0) {$z$};
-    \node[draw=none, below=5pt of z1] {\textit{Cas 1 : aucun enfant}};
-    \node[draw=none, below=20pt of z1, font=\tiny] {Supprimer directement};
+    \node[draw=none, below=5pt of z1] {\textit{Case 1: No children}};
+    \node[draw=none, below=20pt of z1, font=\tiny] {Delete directly};
   \end{scope}
   % Case 2: one child
   \begin{scope}[xshift=3.5cm]
@@ -186,8 +186,8 @@ Trois cas selon le nombre d'enfants du nœud $z$ à supprimer :
     \node[node] (c2) at (0,-0.8) {$c$};
     \draw (p2)--(z2)--(c2);
     \draw[->, keygreen, thick] (p2) to[bend right=40] (c2);
-    \node[draw=none, below=5pt of c2] {\textit{Cas 2 : un enfant}};
-    \node[draw=none, below=25pt of c2, font=\tiny] {Remplacer $z$ par $c$};
+    \node[draw=none, below=5pt of c2] {\textit{Case 2: One child}};
+    \node[draw=none, below=25pt of c2, font=\tiny] {Replace $z$ by $c$};
   \end{scope}
   % Case 3: two children
   \begin{scope}[xshift=7.5cm,
@@ -199,92 +199,92 @@ Trois cas selon le nombre d'enfants du nœud $z$ à supprimer :
         child[missing]{}
         child { node[node] {$\ldots$} }
       };
-    \node[above=2pt of succ, font=\tiny, keyblue] {successeur};
-    \node[draw=none, below=0.3cm] at (0,-1.6) {\textit{Cas 3 : deux enfants}};
+    \node[above=2pt of succ, font=\tiny, keyblue] {successor};
+    \node[draw=none, below=0.3cm] at (0,-1.6) {\textit{Case 3: Two children}};
     \node[draw=none, below=1.5cm, font=\tiny, align=center] at (0,-1.6)
-          {Remplacer $z$ par\\son successeur $y$};
+          {Replace $z$ by\\its successor $y$};
   \end{scope}
 \end{tikzpicture}
 \end{center}
 
 % ══════════════════════════════════════════════
-\subsection{Bilan des opérations sur un ABR}
+\subsection{Summary of BST Operations}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.35}
 \begin{tabular}{lcc}
 \toprule
-\textbf{Opération} & \textbf{Temps} & \textbf{Idée clé} \\
+\textbf{Operation} & \textbf{Time} & \textbf{Key Idea} \\
 \midrule
-Recherche              & $O(h)$      & Suivre gauche/droite selon la clé \\
-Minimum / Maximum      & $O(h)$      & Nœud le plus à gauche/droite \\
-Successeur / Préd.     & $O(h)$      & Min du s.a. droit, ou premier ancêtre \\
-Insertion              & $O(h)$      & Phase de recherche + insertion feuille \\
-Suppression            & $O(h)$      & 3 cas ; utilise \textsc{Transplant} \\
-Parcours infixe        & $\Theta(n)$ & Visite chaque nœud une fois \\
+Search                 & $O(h)$      & Follow left/right according to the key \\
+Minimum / Maximum      & $O(h)$      & Leftmost / rightmost node \\
+Successor / Pred.      & $O(h)$      & Min of right subtree, or first ancestor \\
+Insertion              & $O(h)$      & Search phase + leaf insertion \\
+Deletion               & $O(h)$      & 3 cases; uses \textsc{Transplant} \\
+Inorder traversal      & $\Theta(n)$ & Visits each node once \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\begin{remark}{Équilibrage}{balance}
-Dans le pire cas $h = \Theta(n)$ (arbre dégénéré). Les arbres auto-équilibrés
-(AVL, rouge-noir) maintiennent $h = O(\log n)$, garantissant $O(\log n)$ par opération.
+\begin{remark}{Balancing}{balance}
+In the worst case $h = \Theta(n)$ (degenerate tree). Self-balancing trees
+(AVL, Red-Black) maintain $h = O(\log n)$, guaranteeing $O(\log n)$ per operation.
 \end{remark}
 
 % ══════════════════════════════════════════════
-\subsection{Comparaison des structures de données}
+\subsection{Comparison of Data Structures}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.4}
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Structure}   & \textbf{Capacité} & \textbf{Insertion} & \textbf{Suppression} & \textbf{Recherche} \\
+\textbf{Structure}   & \textbf{Capacity} & \textbf{Insertion} & \textbf{Deletion} & \textbf{Search} \\
 \midrule
-Pile / File (tableau)  & fixe    & $O(1)$       & $O(1)$       & $O(n)$ \\
-Liste chaînée          & dynamique & $O(1)$     & $O(1)$       & $O(n)$ \\
-ABR équilibré          & dynamique & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
+Stack / Queue (array)  & fixed     & $O(1)$       & $O(1)$       & $O(n)$ \\
+Linked list            & dynamic   & $O(1)$     & $O(1)$       & $O(n)$ \\
+Balanced BST           & dynamic   & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 % ══════════════════════════════════════════════════════════════════════════════
-\section*{Programmation Dynamique}
-\addcontentsline{toc}{subsection}{Programmation Dynamique}
+\section*{Dynamic Programming}
+\addcontentsline{toc}{subsection}{Dynamic Programming}
 % ══════════════════════════════════════════════════════════════════════════════
 
-\subsection{Paradigme et idée centrale}
+\subsection{Paradigm and Central Idea}
 
-\begin{definition}{Programmation dynamique (PD)}{dp}
-La \textbf{programmation dynamique} est un paradigme algorithmique (pas une
-fonctionnalité de langage). Son principe :
+\begin{definition}{Dynamic Programming (DP)}{dp}
+\textbf{Dynamic programming} is an algorithmic paradigm (not a language feature). 
+Its principle:
 \begin{center}
-  \textbf{Mémoriser les calculs déjà effectués pour éviter de les refaire.}
+  \textbf{Store already performed calculations to avoid repeating them.}
 \end{center}
-Cela permet de transformer des algorithmes exponentiels en algorithmes polynomiaux.
+This allows transforming exponential algorithms into polynomial algorithms.
 \end{definition}
 
-Un algorithme DP repose sur deux propriétés :
+A DP algorithm relies on two properties:
 \begin{enumerate}
-  \item \textbf{Sous-structure optimale} : la solution optimale d'un problème contient les
-        solutions optimales de ses sous-problèmes.
-  \item \textbf{Sous-problèmes répétés} : un algorithme récursif naïf recalcule les mêmes
-        sous-problèmes un nombre exponentiel de fois.
+  \item \textbf{Optimal substructure}: the optimal solution to a problem contains the 
+        optimal solutions of its subproblems.
+  \item \textbf{Overlapping subproblems}: a naive recursive algorithm recalculates 
+        the same subproblems an exponential number of times.
 \end{enumerate}
 
-\textbf{Deux stratégies d'implémentation :}
+\textbf{Two implementation strategies:}
 \begin{itemize}
-  \item \textbf{Top-down avec mémoïsation} : récursion + table de résultats.
-  \item \textbf{Bottom-up} : remplir la table des petits sous-problèmes vers les grands.
+  \item \textbf{Top-down with memoization}: recursion + results table.
+  \item \textbf{Bottom-up}: filling the table from small subproblems toward large ones.
 \end{itemize}
 
 % ══════════════════════════════════════════════
-\subsection{Premier exemple : nombres de Fibonacci}
+\subsection{First Example: Fibonacci Numbers}
 
 \[
   F_0 = 1,\quad F_1 = 1,\quad F_n = F_{n-1} + F_{n-2} \quad (n \ge 2).
 \]
 
-\subsubsection{Récursion naïve : arbre de calcul exponentiel}
+\subsubsection{Naive Recursion: Exponential Computation Tree}
 
 \begin{center}
 \begin{tikzpicture}[
@@ -313,12 +313,12 @@ Un algorithme DP repose sur deux propriétés :
 \end{tikzpicture}
 
 \vspace{0.3em}
-{\small \textcolor{keyred}{Les nœuds rouges sont recalculés plusieurs fois !}}
+{\small \textcolor{keyred}{Red nodes are recalculated multiple times!}}
 \end{center}
 
-Complexité : \textbf{exponentielle} $O(2^n)$.
+Complexity: \textbf{exponential} $O(2^n)$.
 
-\subsubsection{Bottom-up DP : $\Theta(n)$}
+\subsubsection{Bottom-up DP: $\Theta(n)$}
 
 \begin{algorithm}[H]
 \caption{Bottom-Up-Fib($n$)}
@@ -342,30 +342,30 @@ Complexité : \textbf{exponentielle} $O(2^n)$.
 \end{center}
 
 % ══════════════════════════════════════════════
-\subsection{Coupe de tiges (\textit{Rod Cutting})}
+\subsection{Rod Cutting}
 
-\begin{definition}{Problème de la coupe de tiges}{rodcut}
-\textbf{Entrée :} une tige de longueur $n$ et un tableau de prix $p_i$ pour une tige
-de longueur $i$ ($1 \le i \le n$). \\
-\textbf{Objectif :} trouver la découpe maximisant le revenu total.
+\begin{definition}{Rod Cutting Problem}{rodcut}
+\textbf{Input:} a rod of length $n$ and a table of prices $p_i$ for a rod of 
+length $i$ ($1 \le i \le n$). \\
+\textbf{Objective:} find the cutting that maximizes total revenue.
 \end{definition}
 
-Il existe $2^{n-1}$ découpages possibles : la force brute est inenvisageable.
+There are $2^{n-1}$ possible cuttings: brute force is unfeasible.
 
-\subsubsection{Sous-structure optimale et récurrence}
+\subsubsection{Optimal Substructure and Recurrence}
 
-\begin{theorem}{Structure optimale}{rodthm}
-Si la première coupe optimale est après $i$ unités, et si
-$s_1, \ldots, s_k$ est un découpage optimal de la tige restante de longueur $n-i$,
-alors $i, s_1, \ldots, s_k$ est optimal pour la tige de longueur $n$.
+\begin{theorem}{Optimal Substructure}{rodthm}
+If the first optimal cut is after $i$ units, and if
+$s_1, \ldots, s_k$ is an optimal cutting of the remaining rod of length $n-i$,
+then $i, s_1, \ldots, s_k$ is optimal for the rod of length $n$.
 \end{theorem}
 
-Soit $r(n)$ le revenu optimal pour une tige de longueur $n$ :
+Let $r(n)$ be the optimal revenue for a rod of length $n$:
 \[
   r(n) =
   \begin{cases}
-    0 & \text{si } n = 0, \\
-    \displaystyle\max_{1 \le i \le n} \bigl\{ p_i + r(n-i) \bigr\} & \text{si } n \ge 1.
+    0 & \text{if } n = 0, \\
+    \displaystyle\max_{1 \le i \le n} \bigl\{ p_i + r(n-i) \bigr\} & \text{if } n \ge 1.
   \end{cases}
 \]
 
@@ -377,25 +377,25 @@ Soit $r(n)$ le revenu optimal pour une tige de longueur $n$ :
     \draw[dashed, gray] (\x,-0.3) -- (\x,0.35);
   }
   \draw[keyred, very thick] (2,-0.35) -- (2,0.35)
-        node[above, keyred, font=\tiny] {coupe après $i$};
+        node[above, keyred, font=\tiny] {cut after $i$};
   \draw[decorate, decoration={brace, amplitude=4pt}] (0,0.35) -- (2,0.35)
         node[midway, above=4pt] {$i$};
   \draw[decorate, decoration={brace, amplitude=4pt}] (2,0.35) -- (6,0.35)
-        node[midway, above=4pt] {$n-i$ (sous-problème)};
+        node[midway, above=4pt] {$n-i$ (subproblem)};
 \end{tikzpicture}
 \end{center}
 
-\begin{complexity}{DP pour la coupe de tiges}{rcplx}
+\begin{complexity}{DP for Rod Cutting}{rcplx}
 \begin{itemize}[noitemsep]
-  \item Top-down avec mémoïsation : $O(n^2)$ (graphe de sous-problèmes).
-  \item Bottom-up : $O(n^2)$.
+  \item Top-down with memoization: $O(n^2)$ (subproblem graph).
+  \item Bottom-up: $O(n^2)$.
 \end{itemize}
 \end{complexity}
 
-\subsubsection{Reconstruction de la solution}
+\subsubsection{Reconstruction of the Solution}
 
-On maintient un tableau $s[j]$ stockant la première coupe optimale pour $r(j)$.
-Ensuite, on trace-back : couper $s[n]$, puis résoudre sur $n - s[n]$.
+We maintain an array $s[j]$ storing the first optimal cut for $r(j)$.
+Then, we trace-back: cut $s[n]$, then solve for $n - s[n]$.
 
 \[
 \begin{array}{cccccccccc}
@@ -409,44 +409,44 @@ s[i] & 0 & 1 & 2 & 3 &  2 &  2 &  6 &  1 &  2 \\
 \]
 
 % ══════════════════════════════════════════════
-\subsection{Problème du rendu de monnaie}
+\subsection{Coin Change Problem}
 
-\begin{definition}{Rendu de monnaie}{change}
-\textbf{Entrée :} $n$ dénominations $0 < w_1 < \cdots < w_n$ et un montant cible $W$. \\
-\textbf{Sortie :} nombre minimum de pièces pour atteindre exactement $W$.
+\begin{definition}{Coin Change}{change}
+\textbf{Input:} $n$ denominations $0 < w_1 < \cdots < w_n$ and a target amount $W$. \\
+\textbf{Output:} minimum number of coins to reach exactly $W$.
 \end{definition}
 
-Récurrence DP :
+DP Recurrence:
 \[
   c(w) =
   \begin{cases}
-    0 & \text{si } w = 0, \\
+    0 & \text{if } w = 0, \\
     \displaystyle\min_{\substack{1 \le j \le n \\ w_j \le w}} \bigl\{1 + c(w - w_j)\bigr\}
-       & \text{si } w \ge 1.
+       & \text{if } w \ge 1.
   \end{cases}
 \]
 
-\textbf{Exemple :} $w_1=1, w_2=2, w_3=5$, $W=8$.
-Optimal : 1 pièce de chaque $\Rightarrow$ 3 pièces au total.
+\textbf{Example:} $w_1=1, w_2=2, w_3=5$, $W=8$.
+Optimal: 1 coin of each $\Rightarrow$ 3 coins in total.
 
-Remplissage bottom-up de $w=0$ à $W$ : complexité $O(nW)$.
+Bottom-up filling from $w=0$ to $W$: complexity $O(nW)$.
 
 % ══════════════════════════════════════════════
-\subsection{Recette générale pour la PD}
+\subsection{General Recipe for DP}
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue,
-                  title={\textbf{Étapes de conception d'un algorithme DP}},
+                  title={\textbf{Design Steps for a DP Algorithm}},
                   fonttitle=\bfseries]
 \begin{enumerate}
-  \item \textbf{Identifier les choix et la sous-structure optimale} : un choix réduit
-        le problème à de plus petits sous-problèmes, dont les solutions optimales
-        composent la solution globale.
-  \item \textbf{Écrire une récurrence} pour la valeur optimale en fonction des
-        sous-problèmes.
-  \item \textbf{Éviter les recalculs} via mémoïsation (top-down) ou remplissage
-        de table (bottom-up).
-  \item \textbf{(Optionnel) Reconstruire la solution} en stockant les choix dans une
-        table auxiliaire et en remontant le tracé.
+  \item \textbf{Identify choices and optimal substructure}: a choice reduces
+        the problem to smaller subproblems, whose optimal solutions
+        compose the global solution.
+  \item \textbf{Write a recurrence} for the optimal value based on the
+        subproblems.
+  \item \textbf{Avoid recalculations} via memoization (top-down) or table filling
+        (bottom-up).
+  \item \textbf{(Optional) Reconstruct the solution} by storing choices in an
+        auxiliary table and tracing back.
 \end{enumerate}
 \end{tcolorbox}
 
@@ -454,11 +454,11 @@ Remplissage bottom-up de $w=0$ à $W$ : complexité $O(nW)$.
 \renewcommand{\arraystretch}{1.35}
 \begin{tabular}{lcl}
 \toprule
-\textbf{Problème} & \textbf{Complexité} & \textbf{Taille de la table} \\
+\textbf{Problem} & \textbf{Complexity} & \textbf{Table Size} \\
 \midrule
-Fibonacci         & $\Theta(n)$   & $n+1$ entrées \\
-Coupe de tiges    & $O(n^2)$      & $n+1$ entrées \\
-Rendu de monnaie  & $O(nW)$       & $W+1$ entrées \\
+Fibonacci         & $\Theta(n)$   & $n+1$ entries \\
+Rod Cutting       & $O(n^2)$      & $n+1$ entries \\
+Coin Change       & $O(nW)$       & $W+1$ entries \\
 \bottomrule
 \end{tabular}
 \end{center}

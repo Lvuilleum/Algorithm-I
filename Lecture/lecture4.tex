@@ -1,53 +1,53 @@
-\subsection{Analyse des algorithmes Diviser-pour-Régner}
+\subsection{Analysis of Divide-and-Conquer Algorithms}
 
-Le temps d'exécution $T(n)$ d'un algorithme diviser-pour-régner est décrit par une
-\textbf{récurrence} de la forme :
+The running time $T(n)$ of a divide-and-conquer algorithm is described by a
+\textbf{recurrence} of the form:
 \[
   T(n) =
   \begin{cases}
-    \Theta(1)              & \text{si } n \le c, \\
-    a\,T(n/b) + D(n) + C(n) & \text{sinon,}
+    \Theta(1)               & \text{if } n \le c, \\
+    a\,T(n/b) + D(n) + C(n) & \text{otherwise,}
   \end{cases}
 \]
-où $D(n)$ est le coût de la division et $C(n)$ celui de la combinaison. Pour le tri
-fusion, cela donne $T(n) = 2T(n/2) + \Theta(n)$, soit $T(n) = \Theta(n\log n)$.
+where $D(n)$ is the cost of division and $C(n)$ is the cost of combination. For merge
+sort, this gives $T(n) = 2T(n/2) + \Theta(n)$, which results in $T(n) = \Theta(n\log n)$.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résoudre les récurrences}
+\subsection{Solving Recurrences}
 
-Il existe trois méthodes principales.
+There are three main methods.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsubsection{Méthode de substitution}
+\subsubsection{Substitution Method}
 
-On \textbf{devine} la forme de la solution, puis on utilise l'induction mathématique
-pour prouver les constantes.
+We \textbf{guess} the form of the solution, then use mathematical induction
+to prove the constants.
 
-\paragraph{Exemple : $T(n) = T(n/4 + 1) + T(3n/4 - 1) + \Theta(1)$.}
-\emph{Montrons que $T(n) = O(n)$, i.e.\ $T(n) \le cn - d$ pour des constantes $c, d > 0$.}
+\paragraph{Example: $T(n) = T(n/4 + 1) + T(3n/4 - 1) + \Theta(1)$.}
+\emph{Let us show that $T(n) = O(n)$, i.e., $T(n) \le cn - d$ for constants $c, d > 0$.}
 
 \begin{proof}
-Par hypothèse d'induction, les appels récursifs vérifient la borne. Avec $\Theta(1) \le k$ :
+By inductive hypothesis, the recursive calls satisfy the bound. With $\Theta(1) \le k$:
 \begin{align*}
   T(n) &\le c\!\left(\tfrac{n}{4}+1\right) - d
           + c\!\left(\tfrac{3n}{4}-1\right) - d + k \\
        &= cn - 2d + k.
 \end{align*}
-Il suffit de choisir $d \ge k$ pour avoir $T(n) \le cn - d$. \qed
+It suffices to choose $d \ge k$ to have $T(n) \le cn - d$. \qed
 \end{proof}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsubsection{Arbres de récursion}
+\subsubsection{Recursion Trees}
 
-On \textbf{visualise} le coût à chaque niveau de sous-problèmes. Utile pour générer
-une conjecture à vérifier ensuite par substitution.
+We \textbf{visualize} the cost at each level of subproblems. Useful for generating
+a conjecture to be verified later by substitution.
 
 \begin{center}
 \begin{tikzpicture}[font=\small, level distance=1.1cm,
     level 1/.style={sibling distance=3.2cm},
     level 2/.style={sibling distance=1.6cm},
     every node/.style={circle, draw, fill=blue!10,
-                       inner sep=3pt, minimum size=0.7cm}]
+                        inner sep=3pt, minimum size=0.7cm}]
   \node {$cn$}
     child { node {$cn/2$}
       child { node {$cn/4$} }
@@ -61,65 +61,65 @@ une conjecture à vérifier ensuite par substitution.
 \quad
 \begin{tikzpicture}[font=\small, baseline=0pt]
   \node[align=left]{
-    Niveau 0 : $cn$\\
-    Niveau 1 : $cn/2 + cn/2 = cn$\\
-    Niveau 2 : $4 \times cn/4 = cn$\\
+    Level 0: $cn$\\
+    Level 1: $cn/2 + cn/2 = cn$\\
+    Level 2: $4 \times cn/4 = cn$\\
     $\vdots$\\
-    Total : $cn \times \log_2 n = \Theta(n\log n)$
+    Total: $cn \times \log_2 n = \Theta(n\log n)$
   };
 \end{tikzpicture}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsubsection{Master Theorem (Théorème Maître)}
+\subsubsection{Master Theorem}
 
-Recette pour les récurrences de la forme $T(n) = aT(n/b) + f(n)$
-(avec $a \ge 1$, $b > 1$). On compare $f(n)$ et $n^{\log_b a}$ :
+A "cookbook" for recurrences of the form $T(n) = aT(n/b) + f(n)$
+(with $a \ge 1$, $b > 1$). We compare $f(n)$ and $n^{\log_b a}$:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
 \begin{tabular}{clll}
 \toprule
-\textbf{Cas} & \textbf{Condition sur $f(n)$} & \textbf{Résultat} & \textbf{Intuition} \\
+\textbf{Case} & \textbf{Condition on $f(n)$} & \textbf{Result} & \textbf{Intuition} \\
 \midrule
 1 & $f(n) = O\!\left(n^{\log_b a - \varepsilon}\right)$, $\varepsilon>0$
   & $T(n) = \Theta\!\left(n^{\log_b a}\right)$
-  & Les feuilles dominent \\
+  & Leaves dominate \\
 2 & $f(n) = \Theta\!\left(n^{\log_b a}\right)$
   & $T(n) = \Theta\!\left(n^{\log_b a}\log n\right)$
-  & Coût équiparti \\
+  & Cost is evenly distributed \\
 3 & $f(n) = \Omega\!\left(n^{\log_b a + \varepsilon}\right)$, $\varepsilon>0$
   & $T(n) = \Theta(f(n))$
-  & La racine domine \\
+  & Root dominates \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{Exemples d'application :}
+\textbf{Examples of application:}
 \begin{itemize}
-  \item Merge Sort : $T(n) = 2T(n/2) + \Theta(n)$.
-        Ici $a=2$, $b=2$, $n^{\log_2 2} = n$. Cas~2 $\Rightarrow T(n)=\Theta(n\log n)$.
-  \item Recherche binaire : $T(n) = T(n/2) + \Theta(1)$.
-        Ici $n^{\log_2 1} = 1$. Cas~2 $\Rightarrow T(n)=\Theta(\log n)$.
-  \item Strassen : $T(n) = 7T(n/2) + \Theta(n^2)$.
-        $n^{\log_2 7} \approx n^{2.81} \succ n^2$. Cas~1 $\Rightarrow T(n)=\Theta(n^{\log_2 7})$.
+  \item Merge Sort: $T(n) = 2T(n/2) + \Theta(n)$.
+        Here $a=2$, $b=2$, $n^{\log_2 2} = n$. Case 2 $\Rightarrow T(n)=\Theta(n\log n)$.
+  \item Binary Search: $T(n) = T(n/2) + \Theta(1)$.
+        Here $n^{\log_2 1} = 1$. Case 2 $\Rightarrow T(n)=\Theta(\log n)$.
+  \item Strassen: $T(n) = 7T(n/2) + \Theta(n^2)$.
+        $n^{\log_2 7} \approx n^{2.81} \succ n^2$. Case 1 $\Rightarrow T(n)=\Theta(n^{\log_2 7})$.
 \end{itemize}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Problème du sous-tableau maximum}
+\subsection{Maximum Subarray Problem}
 
-\textbf{Entrée :} un tableau $A[low \ldots high]$ de $n$ entiers (certains négatifs).\\
-\textbf{Sortie :} les indices $i, j$ et la somme $\sum_{k=i}^{j} A[k]$ maximale.
+\textbf{Input:} an array $A[low \ldots high]$ of $n$ integers (some negative).\\
+\textbf{Output:} the indices $i, j$ and the maximum sum $\sum_{k=i}^{j} A[k]$.
 
-\subsubsection{Approche diviser-pour-régner}
+\subsubsection{Divide-and-Conquer Approach}
 
-On divise $A$ en deux moitiés $A[low \ldots mid]$ et $A[mid{+}1 \ldots high]$.
-Le sous-tableau maximal est soit :
+We divide $A$ into two halves $A[low \ldots mid]$ and $A[mid{+}1 \ldots high]$.
+The maximum subarray is either:
 
 \begin{enumerate}
-  \item Entièrement dans la moitié \textbf{gauche},
-  \item Entièrement dans la moitié \textbf{droite},
-  \item \textbf{Traversant le milieu} (une partie à gauche de $mid$, une à droite).
+  \item Entirely in the \textbf{left} half,
+  \item Entirely in the \textbf{right} half,
+  \item \textbf{Crossing the midpoint} (partly in the left of $mid$, partly in the right).
 \end{enumerate}
 
 \begin{center}
@@ -127,17 +127,17 @@ Le sous-tableau maximal est soit :
   \draw[fill=blue!8] (0,0) rectangle (4,0.7);
   \draw[fill=orange!20] (4,0) rectangle (8,0.7);
   \draw[dashed, thick] (4,-0.2) -- (4,0.9);
-  \node at (2, 0.35) {gauche};
-  \node at (6, 0.35) {droite};
+  \node at (2, 0.35) {left};
+  \node at (6, 0.35) {right};
   \node[below] at (4, -0.25) {$mid$};
   % Crossing subarray highlight
   \draw[keyred, very thick] (2.5, 0) rectangle (5.8, 0.7);
-  \node[keyred, above] at (4.15, 0.75) {\small traversant};
+  \node[keyred, above] at (4.15, 0.75) {\small crossing};
 \end{tikzpicture}
 \end{center}
 
-La fonction \textsc{Find-Max-Crossing-Subarray} scanne depuis $mid$ vers la gauche puis
-vers la droite en $\Theta(n)$. La récurrence globale est :
+The \textsc{Find-Max-Crossing-Subarray} function scans from $mid$ toward the left then
+toward the right in $\Theta(n)$. The global recurrence is:
 \[
   T(n) = 2T(n/2) + \Theta(n) \;\Rightarrow\; \boxed{T(n) = \Theta(n \log n)}
 \]

@@ -1,18 +1,18 @@
-\subsection{Ensembles dynamiques}
+\subsection{Dynamic Sets}
 
-Les structures de données servent à implémenter des \textbf{ensembles dynamiques}.
-Les opérations se regroupent en deux catégories :
+Data structures are used to implement \textbf{dynamic sets}.
+Operations are grouped into two categories:
 
 \begin{itemize}
-  \item \textbf{Modification} : Insert, Delete, \dots
-  \item \textbf{Requête} : Search, Minimum, Maximum, \dots
+  \item \textbf{Modification}: Insert, Delete, \dots
+  \item \textbf{Query}: Search, Minimum, Maximum, \dots
 \end{itemize}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Piles (\textit{Stacks}) -- LIFO}
+\subsection{Stacks -- LIFO}
 
-Une pile suit le principe \textbf{LIFO} (\textit{Last-In, First-Out}) : dernier entré,
-premier sorti, comme une pile d'assiettes.
+A stack follows the \textbf{LIFO} (\textit{Last-In, First-Out}) principle: last in,
+first out, like a stack of plates.
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth]
@@ -25,23 +25,23 @@ premier sorti, comme une pile d'assiettes.
   \draw[->, thick, keyred] (1.2, 4*0.6-0.3) -- (0.65, 4*0.6-0.3)
         node[left=0pt]{}; 
   \node[right=2pt, keyred] at (1.2, 4*0.6-0.3) {\textsc{Push}/\textsc{Pop}};
-  \node[left=4pt] at (-0.6, 1) {\textit{fond}};
-  \node[left=4pt] at (-0.6, 4*0.6-0.3) {\textit{sommet}};
+  \node[left=4pt] at (-0.6, 1) {\textit{bottom}};
+  \node[left=4pt] at (-0.6, 4*0.6-0.3) {\textit{top}};
   \node[right=2pt, gray] at (0.65, 0.5) {$S.\mathit{top}$};
 \end{tikzpicture}
 \end{center}
 
 \begin{itemize}
-  \item \textsc{Push}$(S, x)$ : empile $x$ en haut. $O(1)$.
-  \item \textsc{Pop}$(S)$ : retire et retourne le sommet. $O(1)$.
-  \item \textsc{Stack-Empty}$(S)$ : teste si $S.\mathit{top} = 0$. $O(1)$.
+  \item \textsc{Push}$(S, x)$: pushes $x$ onto the top. $O(1)$.
+  \item \textsc{Pop}$(S)$: removes and returns the top element. $O(1)$.
+  \item \textsc{Stack-Empty}$(S)$: tests if $S.\mathit{top} = 0$. $O(1)$.
 \end{itemize}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Files (\textit{Queues}) -- FIFO}
+\subsection{Queues -- FIFO}
 
-Une file suit le principe \textbf{FIFO} (\textit{First-In, First-Out}) : premier entré,
-premier sorti, comme une file d'attente.
+A queue follows the \textbf{FIFO} (\textit{First-In, First-Out}) principle: first in,
+first out, like a waiting line.
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth]
@@ -59,20 +59,20 @@ premier sorti, comme une file d'attente.
 \end{center}
 
 \begin{itemize}
-  \item \textsc{Enqueue}$(Q, x)$ : ajoute $x$ en queue. $O(1)$.
-  \item \textsc{Dequeue}$(Q)$ : retire et retourne l'élément de tête. $O(1)$.
+  \item \textsc{Enqueue}$(Q, x)$: adds $x$ to the tail. $O(1)$.
+  \item \textsc{Dequeue}$(Q)$: removes and returns the head element. $O(1)$.
 \end{itemize}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Listes chaînées (\textit{Linked Lists})}
+\subsection{Linked Lists}
 
-L'ordre linéaire est déterminé par des \textbf{pointeurs} stockés dans chaque objet
-(et non par des indices de tableau).
+Linear order is determined by \textbf{pointers} stored in each object
+(and not by array indices).
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth,
     node/.style={draw, fill=blue!8, minimum width=1.8cm, minimum height=0.65cm,
-                 rounded corners=2pt}]
+                  rounded corners=2pt}]
   \node[node] (a) at (0,0) {4 $|$ \texttt{->}};
   \node[node] (b) at (2.4,0) {1 $|$ \texttt{->}};
   \node[node] (c) at (4.8,0) {7 $|$ \texttt{->}};
@@ -88,19 +88,19 @@ L'ordre linéaire est déterminé par des \textbf{pointeurs} stockés dans chaqu
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{lll}
 \toprule
-\textbf{Opération} & \textbf{Temps} & \textbf{Remarque} \\
+\textbf{Operation} & \textbf{Time} & \textbf{Remark} \\
 \midrule
-\textsc{List-Search}$(L, k)$  & $O(n)$ & Parcours séquentiel \\
-\textsc{List-Insert}$(L, x)$  & $O(1)$ & Insertion en tête \\
-\textsc{List-Delete}$(L, x)$  & $O(1)$ & Si pointeur déjà connu (liste doublement chaînée) \\
+\textsc{List-Search}$(L, k)$  & $O(n)$ & Sequential traversal \\
+\textsc{List-Insert}$(L, x)$  & $O(1)$ & Insertion at the head \\
+\textsc{List-Delete}$(L, x)$  & $O(1)$ & If pointer already known (doubly linked list) \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{Sentinelles :} un objet factice \texttt{L.nil} représente simultanément les extrémités
-de la liste, simplifiant les cas limites (pas de test \texttt{NULL}).
+\textbf{Sentinels:} a dummy object \texttt{L.nil} represents both ends
+of the list simultaneously, simplifying boundary cases (no \texttt{NULL} testing).
 
-\subsubsection{Exemple : inverser une liste en $\Theta(n)$ temps, $\Theta(1)$ espace}
+\subsubsection{Example: reversing a list in $\Theta(n)$ time, $\Theta(1)$ space}
 
 \begin{algorithm}[H]
 \caption{Reverse-List($L$)}
@@ -109,7 +109,7 @@ de la liste, simplifiant les cas limites (pas de test \texttt{NULL}).
 \State $curr \leftarrow L.head$
 \While{$curr \ne \textsc{NIL}$}
     \State $next \leftarrow curr.next$
-    \State $curr.next \leftarrow prev$   \AlgComment{inverser le lien}
+    \State $curr.next \leftarrow prev$   \AlgComment{reverse the link}
     \State $prev \leftarrow curr$
     \State $curr \leftarrow next$
 \EndWhile
@@ -121,14 +121,14 @@ de la liste, simplifiant les cas limites (pas de test \texttt{NULL}).
 \begin{tikzpicture}[font=\small, >=Stealth,
     node/.style={draw, fill=blue!8, minimum width=0.8cm, minimum height=0.55cm}]
   % Before
-  \node[left] at (-0.3, 0.9) {\small\textit{Avant :}};
+  \node[left] at (-0.3, 0.9) {\small\textit{Before:}};
   \foreach \v/\i in {4/0, 1/1, 7/2, 3/3}{
     \node[node] (\i) at (\i*1.2, 0.9) {\v};
   }
   \draw[->] (0.east)--(1.west); \draw[->] (1.east)--(2.west);
   \draw[->] (2.east)--(3.west);
   % After
-  \node[left] at (-0.3, 0) {\small\textit{Après :}};
+  \node[left] at (-0.3, 0) {\small\textit{After:}};
   \foreach \v/\i in {3/0, 7/1, 1/2, 4/3}{
     \node[node] (\i r) at (\i*1.2, 0) {\v};
   }
@@ -138,11 +138,11 @@ de la liste, simplifiant les cas limites (pas de test \texttt{NULL}).
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Conclusion sur les structures élémentaires}
+\subsection{Conclusion on Elementary Structures}
 
 \begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
-                  title={Forces et limites}]
-Piles, files et listes chaînées excellent pour les insertions/suppressions en $O(1)$,
-mais sont \textbf{mauvaises pour la recherche} ($O(n)$). Pour une recherche rapide, il
-faut des structures plus sophistiquées (arbres, tables de hachage).
+                  title={Strengths and Limitations}]
+Stacks, queues, and linked lists excel at $O(1)$ insertions/deletions,
+but are \textbf{poor for searching} ($O(n)$). For fast searching,
+more sophisticated structures are needed (trees, hash tables).
 \end{tcolorbox}

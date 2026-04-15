@@ -1,18 +1,18 @@
-% Lecture 6 : Heapsort & Files de priorité
-% (Les rappels sur la multiplication de matrices et la structure de tas
-%  ont été couverts en Lecture 5.)
+% Lecture 6: Heapsort & Priority Queues
+% (Reminders on matrix multiplication and the heap structure 
+% were covered in Lecture 5.)
 
-\subsection{L'algorithme Heapsort}
+\subsection{The Heapsort Algorithm}
 
-Heapsort trie un tableau \emph{en place} en $O(n\log n)$ dans le pire cas.
+Heapsort sorts an array \emph{in-place} in $O(n\log n)$ in the worst case.
 
 \begin{enumerate}
-  \item \textbf{Construire} un max-heap depuis le tableau d'entrée : $O(n)$.
-  \item \textbf{Répéter $n-1$ fois :}
+  \item \textbf{Build} a max-heap from the input array: $O(n)$.
+  \item \textbf{Repeat $n-1$ times:}
     \begin{enumerate}[label=\alph*.]
-      \item Échanger la racine (maximum) $A[1]$ avec le dernier élément $A[heap\_size]$.
-      \item Réduire $heap\_size$ de 1 (l'élément échangé est à sa place définitive).
-      \item Appeler \textsc{Max-Heapify}$(A, 1)$ pour restaurer la propriété : $O(\log n)$.
+      \item Exchange the root (maximum) $A[1]$ with the last element $A[heap\_size]$.
+      \item Reduce $heap\_size$ by 1 (the exchanged element is in its final position).
+      \item Call \textsc{Max-Heapify}$(A, 1)$ to restore the property: $O(\log n)$.
     \end{enumerate}
 \end{enumerate}
 
@@ -29,53 +29,53 @@ Heapsort trie un tableau \emph{en place} en $O(n\log n)$ dans le pire cas.
         at (0, 0) {16};
   % Arrow
   \draw[->, thick, keyred] (0, 1.1) -- (0, 0.4);
-  \node[right=2pt, font=\tiny] at (0, 0.75) {place finale};
+  \node[right=2pt, font=\tiny] at (0, 0.75) {final position};
 \end{tikzpicture}
 \end{center}
 
 \begin{complexity}{Heapsort}{heapcplx}
 \begin{itemize}[noitemsep]
-  \item \textsc{Build-Max-Heap} : $O(n)$.
-  \item $n-1$ appels à \textsc{Max-Heapify} : $O(\log n)$ chacun.
-  \item \textbf{Total : $O(n \log n)$ dans tous les cas.}
+  \item \textsc{Build-Max-Heap}: $O(n)$.
+  \item $n-1$ calls to \textsc{Max-Heapify}: $O(\log n)$ each.
+  \item \textbf{Total: $O(n \log n)$ in all cases.}
 \end{itemize}
 \end{complexity}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Files de priorité (\textit{Priority Queues})}
+\subsection{Priority Queues}
 
-Une \textbf{file de priorité (max)} maintient un ensemble dynamique d'éléments avec clé,
-et supporte :
+A \textbf{(max) priority queue} maintains a dynamic set of elements with keys,
+and supports:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{lll}
 \toprule
-\textbf{Opération} & \textbf{Description} & \textbf{Temps} \\
+\textbf{Operation} & \textbf{Description} & \textbf{Time} \\
 \midrule
-\textsc{Maximum}$(S)$       & Retourne l'élément de clé maximale & $O(1)$ \\
-\textsc{Extract-Max}$(S)$   & Retire et retourne le maximum      & $O(\log n)$ \\
-\textsc{Increase-Key}$(S,x,k)$ & Augmente la clé de $x$ à $k$   & $O(\log n)$ \\
-\textsc{Insert}$(S,x)$      & Insère $x$ dans $S$                & $O(\log n)$ \\
+\textsc{Maximum}$(S)$       & Returns the element with the maximum key & $O(1)$ \\
+\textsc{Extract-Max}$(S)$   & Removes and returns the maximum      & $O(\log n)$ \\
+\textsc{Increase-Key}$(S,x,k)$ & Increases the key of $x$ to $k$   & $O(\log n)$ \\
+\textsc{Insert}$(S,x)$      & Inserts $x$ into $S$                 & $O(\log n)$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{Implémentation} : le tas binaire implémente toutes ces opérations efficacement.
+\textbf{Implementation}: the binary heap implements all these operations efficiently.
 
 \paragraph{\textsc{Extract-Max}.}
 \begin{enumerate}[noitemsep]
-  \item Sauvegarder $A[1]$ (le maximum).
-  \item Mettre $A[heap\_size]$ à la racine, réduire $heap\_size$.
-  \item Appeler \textsc{Max-Heapify}$(A,1)$.
+  \item Save $A[1]$ (the maximum).
+  \item Put $A[heap\_size]$ at the root, reduce $heap\_size$.
+  \item Call \textsc{Max-Heapify}$(A,1)$.
 \end{enumerate}
 
 \paragraph{\textsc{Increase-Key}$(A, i, k)$.}
-Après avoir mis à jour $A[i] \leftarrow k$, remonter dans l'arbre tant que la propriété
-max-heap est violée (l'élément « flotte » vers le haut).
+After updating $A[i] \leftarrow k$, move up the tree as long as the max-heap 
+property is violated (the element "floats" upward).
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Application : file d'attente à priorité}]
-Utilisée dans les algorithmes de graphes (Dijkstra, Prim) pour extraire efficacement
-le prochain sommet à traiter.
+                  title={Application: Priority Queue}]
+Used in graph algorithms (Dijkstra, Prim) to efficiently extract the next 
+vertex to be processed.
 \end{tcolorbox}

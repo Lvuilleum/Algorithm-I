@@ -1,49 +1,49 @@
-\subsection{Qu'est-ce qu'un algorithme ?}
+\subsection{What is an algorithm?}
 
-Un \textbf{algorithme} est une procédure de calcul bien définie qui prend une ou plusieurs
-valeurs en \textbf{entrée} (\textit{input}) et produit une ou plusieurs valeurs en
-\textbf{sortie} (\textit{output}) : c'est une séquence d'étapes transformant l'entrée en sortie.
+An \textbf{algorithm} is a well-defined computational procedure that takes one or more
+values as \textbf{input} and produces one or more values as
+\textbf{output}: it is a sequence of steps transforming input into output.
 
-On distingue l'algorithme de la \textbf{structure de données}, qui est une méthode pour
-stocker et organiser l'information afin de faciliter son accès et sa modification.
+We distinguish an algorithm from a \textbf{data structure}, which is a method for
+storing and organizing information to facilitate its access and modification.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Exemple introductif : la somme arithmétique}
+\subsection{Introductory example: arithmetic sum}
 
-\textbf{Problème :} calculer $\displaystyle S = \sum_{i=1}^{n} i$.
+\textbf{Problem:} calculate $\displaystyle S = \sum_{i=1}^{n} i$.
 
 \begin{center}
 \begin{tikzpicture}[>=Stealth]
   % Naive box
   \node[draw=keyred, fill=red!8, rounded corners, text width=5.5cm, align=center,
         inner sep=8pt] (naive) {
-    \textbf{\textcolor{keyred}{Approche naïve}}\\[4pt]
-    Boucle : additionner $1 + 2 + \cdots + n$\\[4pt]
+    \textbf{\textcolor{keyred}{Naive approach}}\\[4pt]
+    Loop: add $1 + 2 + \cdots + n$\\[4pt]
     $n$ additions \;\;$\Rightarrow$\;\; $\Theta(n)$
   };
   % Smart box
   \node[draw=keygreen, fill=green!8, rounded corners, text width=5.5cm, align=center,
         inner sep=8pt, right=1.5cm of naive] (smart) {
-    \textbf{\textcolor{keygreen}{Approche de Gauss}}\\[4pt]
-    Formule fermée : $\dfrac{n(n+1)}{2}$\\[4pt]
-    3 opérations \;\;$\Rightarrow$\;\; $\Theta(1)$
+    \textbf{\textcolor{keygreen}{Gauss's approach}}\\[4pt]
+    Closed-form formula: $\dfrac{n(n+1)}{2}$\\[4pt]
+    3 operations \;\;$\Rightarrow$\;\; $\Theta(1)$
   };
   \draw[->, thick, gray] (naive) -- node[above, font=\small\itshape]{vs.} (smart);
 \end{tikzpicture}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Pourquoi l'efficacité compte ?}
+\subsection{Why does efficiency matter?}
 
-Un ordinateur \emph{lent} exécutant un bon algorithme finira toujours par battre un
-ordinateur \emph{rapide} exécutant un mauvais algorithme, dès que la taille $n$ de
-l'entrée devient suffisamment grande.
+A \emph{slow} computer running a good algorithm will always eventually beat a
+\emph{fast} computer running a bad algorithm, as soon as the input size $n$
+becomes large enough.
 
 \begin{center}
 \begin{tikzpicture}
   \begin{scope}
     \draw[->] (0,0) -- (5.5,0) node[right] {$n$};
-    \draw[->] (0,0) -- (0,4.2) node[above] {temps};
+    \draw[->] (0,0) -- (0,4.2) node[above] {time};
     % O(n^2)
     \draw[keyred, thick, domain=0:2.0, samples=60]
           plot (\x, {0.4*\x*\x}) node[right] {$O(n^2)$};
@@ -61,6 +61,6 @@ l'entrée devient suffisamment grande.
 
 \begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
                   title={Conclusion}]
-La \textbf{performance asymptotique} (comportement quand $n \to \infty$) est plus
-déterminante que les constantes multiplicatives liées au matériel.
+The \textbf{asymptotic performance} (behavior as $n \to \infty$) is more
+decisive than the multiplicative constants related to the hardware.
 \end{tcolorbox}

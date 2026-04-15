@@ -1,65 +1,65 @@
 % ══════════════════════════════════════════════════════════════════════════════
-% Lecture 9 : Programmation Dynamique – Coupe de tiges (reconstruction)
-%             et Multiplication de chaînes de matrices
+% Lecture 9: Dynamic Programming – Rod Cutting (reconstruction)
+%             and Matrix Chain Multiplication
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Rappel : éléments clés d'un algorithme DP}
+\subsection{Reminder: Key Elements of a DP Algorithm}
 
-La programmation dynamique repose sur deux propriétés fondamentales :
+Dynamic programming relies on two fundamental properties:
 
 \begin{enumerate}
-  \item \textbf{Sous-structure optimale} : une solution optimale s'obtient en faisant
-        un \emph{choix}, ce qui laisse un ou plusieurs sous-problèmes à résoudre,
-        et la solution optimale globale résout ces sous-problèmes de façon optimale.
-  \item \textbf{Sous-problèmes répétés} : un algorithme récursif naïf recalcule les mêmes
-        sous-problèmes de nombreuses fois.
+  \item \textbf{Optimal substructure}: an optimal solution is obtained by making
+        a \emph{choice}, which leaves one or more subproblems to be solved,
+        and the global optimal solution solves these subproblems optimally.
+  \item \textbf{Overlapping subproblems}: a naive recursive algorithm recalculates the same
+        subproblems many times.
         \begin{itemize}
-          \item \textbf{Top-down avec mémoïsation} : résoudre récursivement en
-                mémorisant chaque résultat dans une table.
-          \item \textbf{Bottom-up} : trier les sous-problèmes et résoudre d'abord
-                les plus petits ; ainsi, quand on résout un sous-problème, les
-                sous-problèmes dont il dépend sont déjà calculés.
+          \item \textbf{Top-down with memoization}: solve recursively by
+                storing each result in a table.
+          \item \textbf{Bottom-up}: sort the subproblems and solve the smallest
+                ones first; thus, when a subproblem is solved, the
+                subproblems it depends on are already computed.
         \end{itemize}
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Coupe de tiges – Reconstruction de la solution optimale}
+\subsection{Rod Cutting – Reconstruction of the Optimal Solution}
 
-En Lecture~8, l'algorithme DP renvoyait uniquement le revenu optimal $r(n)$.
-Il est souvent nécessaire de récupérer \emph{comment} obtenir ce revenu, c'est-à-dire
-les longueurs des morceaux à couper.
+In Lecture~8, the DP algorithm returned only the optimal revenue $r(n)$.
+It is often necessary to retrieve \emph{how} to obtain this revenue, i.e.,
+the lengths of the pieces to be cut.
 
-\subsubsection{Algorithme étendu avec table des décisions}
+\subsubsection{Extended Algorithm with Decision Table}
 
-L'idée est de maintenir une table auxiliaire $s[0\ldots n]$ : $s[j]$ stocke la longueur
-du premier morceau coupé (la \emph{décision}) correspondant au revenu optimal $r[j]$.
+The idea is to maintain an auxiliary table $s[0\ldots n]$: $s[j]$ stores the length
+of the first piece cut (the \emph{decision}) corresponding to the optimal revenue $r[j]$.
 
 \begin{algorithm}[H]
 \caption{Extended-Bottom-Up-Cut-Rod($p$, $n$)}
 \begin{algorithmic}[1]
-\State Créer les tableaux $r[0\ldots n]$ et $s[0\ldots n]$
+\State Create arrays $r[0\ldots n]$ and $s[0\ldots n]$
 \State $r[0] \leftarrow 0$
 \For{$j = 1$ \textbf{to} $n$}
     \State $q \leftarrow -\infty$
     \For{$i = 1$ \textbf{to} $j$}
         \If{$q < p[i] + r[j - i]$}
-            \State $q \leftarrow p[i] + r[j - i]$  \AlgComment{meilleur revenu}
-            \State $s[j] \leftarrow i$              \AlgComment{stocker le choix optimal}
+            \State $q \leftarrow p[i] + r[j - i]$  \AlgComment{best revenue}
+            \State $s[j] \leftarrow i$              \AlgComment{store the optimal choice}
         \EndIf
     \EndFor
     \State $r[j] \leftarrow q$
 \EndFor
-\State \Return $r$ et $s$
+\State \Return $r$ and $s$
 \end{algorithmic}
 \end{algorithm}
 
-La complexité reste $\Theta(n^2)$. La seule différence avec l'algorithme de base
-est le maintien de $s[j]$ qui enregistre l'indice $i$ réalisant le maximum.
+The complexity remains $\Theta(n^2)$. The only difference from the basic algorithm
+is the maintenance of $s[j]$ which records the index $i$ achieving the maximum.
 
-\subsubsection{Exemple : tables $r$ et $s$ pour $n = 8$}
+\subsubsection{Example: Tables $r$ and $s$ for $n = 8$}
 
-En utilisant la table de prix $p_i$ : 1, 5, 8, 9, 10, 17, 17, 20, 24, 30 :
+Using the price table $p_i$: 1, 5, 8, 9, 10, 17, 17, 20, 24, 30:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
@@ -73,23 +73,23 @@ $s[i]$ & 0 & 1 & 2 & 3 & 2  & 2  & 6  & 1  & 2  \\
 \end{tabular}
 \end{center}
 
-\subsubsection{Extraction de la solution}
+\subsubsection{Extraction of the Solution}
 
-La table $s$ stocke les choix menant à une solution optimale.
-On remonte la solution en traçant-back depuis $n$ :
+Table $s$ stores the choices leading to an optimal solution.
+We reconstruct the solution by tracing back from $n$:
 
 \begin{algorithm}[H]
 \caption{Print-Cut-Rod-Solution($p$, $n$)}
 \begin{algorithmic}[1]
 \State $(r, s) \leftarrow \textsc{Extended-Bottom-Up-Cut-Rod}(p, n)$
 \While{$n > 0$}
-    \State \textbf{afficher} $s[n]$   \AlgComment{taille du prochain morceau}
+    \State \textbf{print} $s[n]$   \AlgComment{size of the next piece}
     \State $n \leftarrow n - s[n]$
 \EndWhile
 \end{algorithmic}
 \end{algorithm}
 
-\textbf{Trace pour $n = 8$ :}
+\textbf{Trace for $n = 8$:}
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth]
@@ -98,25 +98,25 @@ On remonte la solution en traçant-back depuis $n$ :
           minimum height=0.6cm, align=center] at (\x, 0) {$n = \n$};
     \ifx\out\empty\else
       \node[draw=none, fill=none, keygreen, font=\bfseries\small] at (\x-1.25, 0)
-            {sortie : \out};
+            {output: \out};
     \fi
   }
   \draw[->, thick, gray] (1.0, 0) -- (1.5, 0);
   \draw[->, thick, gray] (3.5, 0) -- (4.0, 0);
   \node[below=8pt, keyred, font=\small] at (2.5, -0.3)
-        {Découpe : \textbf{2 + 6}, revenu $= 5 + 17 = 22$};
+        {Cuts: \textbf{2 + 6}, revenue $= 5 + 17 = 22$};
 \end{tikzpicture}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résumé : coupe de tiges}
+\subsection{Summary: Rod Cutting}
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Récapitulatif DP – Coupe de tiges}]
+                  title={Summary DP – Rod Cutting}]
 \begin{itemize}[noitemsep]
-  \item \textbf{Choix} : où effectuer la coupe la plus à gauche.
-  \item \textbf{Sous-structure optimale} : le reste doit être découpé de façon optimale.
-  \item \textbf{Récurrence} :
+  \item \textbf{Choice}: where to make the leftmost cut.
+  \item \textbf{Optimal substructure}: the remainder must be cut optimally.
+  \item \textbf{Recurrence}:
     \[
       r(n) =
       \begin{cases}
@@ -124,49 +124,49 @@ On remonte la solution en traçant-back depuis $n$ :
         \displaystyle\max_{1 \le i \le n} \bigl\{p_i + r(n-i)\bigr\} & \text{si } n \ge 1.
       \end{cases}
     \]
-  \item \textbf{Complexité} : $\Theta(n^2)$ (top-down ou bottom-up).
-  \item \textbf{Reconstruction} : table auxiliaire $s$ + trace-back en $O(n)$.
+  \item \textbf{Complexity}: $\Theta(n^2)$ (top-down or bottom-up).
+  \item \textbf{Reconstruction}: auxiliary table $s$ + trace-back in $O(n)$.
 \end{itemize}
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Quand peut-on utiliser la programmation dynamique ?}
+\subsection{When Can Dynamic Programming Be Used?}
 
 \begin{enumerate}
-  \item \textbf{Sous-structure optimale.}
+  \item \textbf{Optimal substructure.}
     \begin{itemize}
-      \item Une solution optimale peut être construite en combinant des solutions
-            optimales de sous-problèmes.
-      \item Cela implique que la valeur optimale peut être exprimée par une
-            \emph{formule récursive}.
+      \item An optimal solution can be constructed by combining optimal solutions
+            of subproblems.
+      \item This implies that the optimal value can be expressed by a
+            \emph{recursive formula}.
     \end{itemize}
-  \item \textbf{Sous-problèmes répétés.}
+  \item \textbf{Overlapping subproblems.}
     \begin{itemize}
-      \item Un algorithme récursif naïf peut revisiter le même sous-problème
-            de nombreuses fois.
+      \item A naive recursive algorithm may revisit the same subproblem
+            many times.
     \end{itemize}
 \end{enumerate}
 
-\begin{remark}{Problème du rendu de monnaie}{change9}
-La DP s'applique directement à ce problème classique. Avec $n$ dénominations
-$0 < w_1 < \cdots < w_n$ et un montant cible $W$, on minimise le nombre de pièces :
+\begin{remark}{Coin Change Problem}{change9}
+DP applies directly to this classic problem. With $n$ denominations
+$0 < w_1 < \cdots < w_n$ and a target amount $W$, we minimize the number of coins:
 \[
   \min\left\{\sum_{j=1}^{n} x_j \;:\; \sum_{j=1}^{n} w_j x_j = W,\; x_j \in \mathbb{Z}_{\ge 0}\right\}.
 \]
-\textbf{Exemple :} $w_1=1$, $w_2=2$, $w_3=5$, $W=8$.
-Optimal : $x_1 = x_2 = x_3 = 1 \Rightarrow$ 3~pièces.
+\textbf{Example:} $w_1=1$, $w_2=2$, $w_3=5$, $W=8$.
+Optimal: $x_1 = x_2 = x_3 = 1 \Rightarrow$ 3~coins.
 \end{remark}
 
 % ══════════════════════════════════════════════════════════════════════════════
-\section*{Multiplication de chaînes de matrices}
-\addcontentsline{toc}{subsection}{Multiplication de chaînes de matrices}
+\section*{Matrix Chain Multiplication}
+\addcontentsline{toc}{subsection}{Matrix Chain Multiplication}
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Coût de la multiplication de deux matrices}
+\subsection{Cost of Multiplying Two Matrices}
 
-Multiplier une matrice $A_{p \times q}$ par une matrice $B_{q \times r}$ produit une
-matrice $C_{p \times r}$.
+Multiplying a matrix $A_{p \times q}$ by a matrix $B_{q \times r}$ produces a
+matrix $C_{p \times r}$.
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth]
@@ -189,117 +189,117 @@ matrice $C_{p \times r}$.
   \node at (6.4, 1.0) {$C_{p,r}$};
   % Annotation
   \node[below=4pt, keyred, font=\bfseries\small] at (3.5, -0.2)
-        {Coût : $p \cdot q \cdot r$ multiplications scalaires};
+        {Cost: $p \cdot q \cdot r$ scalar multiplications};
 \end{tikzpicture}
 \end{center}
 
-Chaque entrée de $C$ nécessite $q$ multiplications scalaires.
-La matrice $C$ contient $p \cdot r$ entrées, donc le coût total est
-$\mathbf{p \cdot q \cdot r}$ \textbf{multiplications scalaires}.
+Each entry of $C$ requires $q$ scalar multiplications.
+The matrix $C$ contains $p \cdot r$ entries, so the total cost is
+$\mathbf{p \cdot q \cdot r}$ \textbf{scalar multiplications}.
 
 \begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
-                  title={Pourquoi l'ordre d'association importe-t-il ?}]
-Pour $A$ ($20 \times 1$), $B$ ($1 \times 10$), $C$ ($10 \times 100$) :
+                  title={Why does the association order matter?}]
+For $A$ ($20 \times 1$), $B$ ($1 \times 10$), $C$ ($10 \times 100$):
 \begin{itemize}[noitemsep]
-  \item $(A \times (B \times C))$ : $1\cdot10\cdot100 + 20\cdot1\cdot100 = 3\,000$
-  \item $((A \times B) \times C)$ : $20\cdot1\cdot10 + 20\cdot10\cdot100 = 20\,200$
+  \item $(A \times (B \times C))$ : $1\cdot10\cdot100 + 20\cdot1\cdot100 = 3,000$
+  \item $((A \times B) \times C)$ : $20\cdot1\cdot10 + 20\cdot10\cdot100 = 20,200$
 \end{itemize}
-La parenthésisation peut \textbf{modifier radicalement} le nombre d'opérations.
+Parenthesization can \textbf{radically modify} the number of operations.
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Définition du problème}
+\subsection{Problem Definition}
 
-\begin{definition}{Multiplication de chaînes de matrices}{mcm}
-\textbf{Entrée :} une chaîne $\langle A_1, A_2, \ldots, A_n \rangle$ de $n$ matrices,
-où la matrice $A_i$ a la dimension $p_{i-1} \times p_i$ pour $i = 1, \ldots, n$.
+\begin{definition}{Matrix Chain Multiplication}{mcm}
+\textbf{Input:} a sequence $\langle A_1, A_2, \ldots, A_n \rangle$ of $n$ matrices,
+where matrix $A_i$ has dimension $p_{i-1} \times p_i$ for $i = 1, \ldots, n$.
 
-\textbf{Sortie :} une parenthésisation complète du produit $A_1 A_2 \cdots A_n$
-minimisant le nombre de multiplications scalaires.
+\textbf{Output:} a complete parenthesization of the product $A_1 A_2 \cdots A_n$
+minimizing the number of scalar multiplications.
 \end{definition}
 
-\textbf{Remarques :}
+\textbf{Notes:}
 \begin{itemize}
-  \item On ne demande \emph{pas} de calculer le produit, seulement de trouver la
-        meilleure parenthésisation.
-  \item La parenthésisation peut affecter considérablement le nombre de
+  \item We do \emph{not} ask to compute the product, only to find the
+        best parenthesization.
+  \item Parenthesization can considerably affect the number of
         multiplications.
 \end{itemize}
 
-\textbf{Exemple :} chaîne $A_1 A_2 A_3$ avec dimensions $50\times5$, $5\times100$,
-$100\times10$ :
+\textbf{Example:} sequence $A_1 A_2 A_3$ with dimensions $50\times5$, $5\times100$,
+$100\times10$:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{lrl}
 \toprule
-\textbf{Parenthésisation} & \textbf{Coût} & \textbf{Calcul} \\
+\textbf{Parenthesization} & \textbf{Cost} & \textbf{Calculation} \\
 \midrule
-$(A_1 A_2) A_3$ & $75\,000$ & $50\cdot5\cdot100 + 50\cdot100\cdot10$ \\
-$A_1 (A_2 A_3)$ & $7\,500$  & $5\cdot100\cdot10 + 50\cdot5\cdot10$ \\
+$(A_1 A_2) A_3$ & $75,000$ & $50\cdot5\cdot100 + 50\cdot100\cdot10$ \\
+$A_1 (A_2 A_3)$ & $7,500$  & $5\cdot100\cdot10 + 50\cdot5\cdot10$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Sous-structure optimale}
+\subsection{Optimal Substructure}
 
-\begin{theorem}{Sous-structure optimale – Multiplication de matrices}{mcmopt}
-Supposons que la parenthésisation optimale de $A_1 A_2 \cdots A_n$ effectue la
-dernière multiplication comme $(A_1 \cdots A_k)(A_{k+1} \cdots A_n)$. Alors les
-parenthésisations de $A_1 \cdots A_k$ et $A_{k+1} \cdots A_n$ dans cette solution
-optimale sont elles-mêmes optimales.
+\begin{theorem}{Optimal Substructure – Matrix Multiplication}{mcmopt}
+Suppose the optimal parenthesization of $A_1 A_2 \cdots A_n$ performs the
+last multiplication as $(A_1 \cdots A_k)(A_{k+1} \cdots A_n)$. Then the
+parenthesizations of $A_1 \cdots A_k$ and $A_{k+1} \cdots A_n$ in this
+optimal solution are themselves optimal.
 \end{theorem}
 
 \begin{proof}
-Soit $M(P)$ le nombre de multiplications scalaires d'une parenthésisation $P$.
-Notons $((O_L) \cdot (O_R))$ la solution optimale où $O_L$ et $O_R$ parenthésisent
-respectivement $A_1\cdots A_k$ et $A_{k+1}\cdots A_n$. Soient $P_L$ et $P_R$ des
-parenthésisations optimales de ces deux sous-chaînes. On a :
+Let $M(P)$ be the number of scalar multiplications of a parenthesization $P$.
+Let $((O_L) \cdot (O_R))$ be the optimal solution where $O_L$ and $O_R$ parenthesize
+respectively $A_1\cdots A_k$ and $A_{k+1}\cdots A_n$. Let $P_L$ and $P_R$ be
+optimal parenthesizations of these two subchains. We have:
 \begin{align*}
   M((O_L) \cdot (O_R))
     &= p_0 \cdot p_k \cdot p_n + M(O_L) + M(O_R) \\
     &\ge p_0 \cdot p_k \cdot p_n + M(P_L) + M(P_R)
      = M((P_L) \cdot (P_R)).
 \end{align*}
-Puisque $((O_L)\cdot(O_R))$ est optimal, on a l'égalité, donc
-$M(P_L) = M(O_L)$ et $M(P_R) = M(O_R)$ : $P_L$ et $P_R$ sont bien optimales.
+Since $((O_L)\cdot(O_R))$ is optimal, we have equality, thus
+$M(P_L) = M(O_L)$ and $M(P_R) = M(O_R)$: $P_L$ and $P_R$ are indeed optimal.
 \end{proof}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Formule récursive}
+\subsection{Recursive Formula}
 
-Soit $m[i, j]$ le nombre minimal de multiplications scalaires pour calculer
+Let $m[i, j]$ be the minimum number of scalar multiplications to compute
 $A_i A_{i+1} \cdots A_j$.
 
 \[
   m[i, j] =
   \begin{cases}
-    0 & \text{si } i = j, \\
+    0 & \text{if } i = j, \\
     \displaystyle\min_{i \le k < j}
       \bigl\{ m[i,k] + m[k+1,j] + p_{i-1}\, p_k\, p_j \bigr\}
-    & \text{si } i < j.
+    & \text{if } i < j.
   \end{cases}
 \]
 
-\begin{remark}{Ordre de remplissage}{ordrem}
-$m[i, j]$ ne dépend que de sous-problèmes avec un intervalle $j - i$ \emph{plus petit}.
-Un algorithme bottom-up résout donc les sous-problèmes par ordre croissant de $j - i$
-(longueur de chaîne $\ell = j - i + 1$).
+\begin{remark}{Filling Order}{ordrem}
+$m[i, j]$ depends only on subproblems with a \emph{smaller} interval $j - i$.
+A bottom-up algorithm therefore solves subproblems by increasing order of $j - i$
+(chain length $\ell = j - i + 1$).
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Algorithme bottom-up}
+\subsection{Bottom-up Algorithm}
 
 \begin{algorithm}[H]
 \caption{Matrix-Chain-Order($p$)}
 \begin{algorithmic}[1]
 \State $n \leftarrow p.\mathit{length} - 1$
-\State Créer les tables $m[1\ldots n,\, 1\ldots n]$ et $s[1\ldots n,\, 1\ldots n]$
+\State Create tables $m[1\ldots n,\, 1\ldots n]$ and $s[1\ldots n,\, 1\ldots n]$
 \For{$i = 1$ \textbf{to} $n$}
     \State $m[i, i] \leftarrow 0$
 \EndFor
-\For{$\ell = 2$ \textbf{to} $n$}                  \AlgComment{$\ell$ = longueur de la chaîne}
+\For{$\ell = 2$ \textbf{to} $n$}                  \AlgComment{$\ell$ = chain length}
     \For{$i = 1$ \textbf{to} $n - \ell + 1$}
         \State $j \leftarrow i + \ell - 1$
         \State $m[i, j] \leftarrow \infty$
@@ -307,43 +307,43 @@ Un algorithme bottom-up résout donc les sous-problèmes par ordre croissant de 
             \State $q \leftarrow m[i,k] + m[k+1,j] + p_{i-1}\, p_k\, p_j$
             \If{$q < m[i,j]$}
                 \State $m[i,j] \leftarrow q$
-                \State $s[i,j] \leftarrow k$   \AlgComment{$s$ mémorise le choix optimal}
+                \State $s[i,j] \leftarrow k$    \AlgComment{$s$ stores the optimal choice}
             \EndIf
         \EndFor
     \EndFor
 \EndFor
-\State \Return $m$ et $s$
+\State \Return $m$ and $s$
 \end{algorithmic}
 \end{algorithm}
 
 \begin{complexity}{Matrix-Chain-Order}{mcmcplx}
 \begin{itemize}[noitemsep]
-  \item La table $m$ contient $O(n^2)$ entrées.
-  \item Chaque entrée $m[i,j]$ requiert $O(n)$ pour trouver le meilleur $k$.
-  \item \textbf{Complexité totale : $\Theta(n^3)$ en temps, $\Theta(n^2)$ en espace.}
+  \item Table $m$ contains $O(n^2)$ entries.
+  \item Each entry $m[i,j]$ requires $O(n)$ to find the best $k$.
+  \item \textbf{Total complexity: $\Theta(n^3)$ in time, $\Theta(n^2)$ in space.}
 \end{itemize}
 \end{complexity}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Exemple complet}
+\subsection{Complete Example}
 
-Chaîne de $n = 6$ matrices avec dimensions :
+Chain of $n = 6$ matrices with dimensions:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{lcccccc}
 \toprule
-Matrice     & $A_1$          & $A_2$          & $A_3$         & $A_4$        & $A_5$          & $A_6$ \\
+Matrix      & $A_1$           & $A_2$           & $A_3$          & $A_4$         & $A_5$           & $A_6$ \\
 \midrule
 Dimensions & $30\times35$ & $35\times15$ & $15\times5$ & $5\times10$ & $10\times20$ & $20\times25$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\noindent Soit $p = \langle 30, 35, 15, 5, 10, 20, 25 \rangle$.
+\noindent Let $p = \langle 30, 35, 15, 5, 10, 20, 25 \rangle$.
 
-Les tables $m$ (coûts optimaux) et $s$ (choix optimaux) calculées par
-\textsc{Matrix-Chain-Order} sont :
+Tables $m$ (optimal costs) and $s$ (optimal choices) computed by
+\textsc{Matrix-Chain-Order} are:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.4}
@@ -353,11 +353,11 @@ Les tables $m$ (coûts optimaux) et $s$ (choix optimaux) calculées par
 $j \backslash i$ & 1 & 2 & 3 & 4 & 5 & 6 \\
 \hline
 1 & 0 & & & & & \\
-2 & 15\,750 & 0 & & & & \\
-3 & 7\,875 & 2\,625 & 0 & & & \\
-4 & 9\,375 & 4\,375 & 750 & 0 & & \\
-5 & 11\,875 & 7\,125 & 2\,500 & 1\,000 & 0 & \\
-6 & 15\,125 & 10\,500 & 5\,375 & 3\,500 & 5\,000 & 0 \\
+2 & 15,750 & 0 & & & & \\
+3 & 7,875 & 2,625 & 0 & & & \\
+4 & 9,375 & 4,375 & 750 & 0 & & \\
+5 & 11,875 & 7,125 & 2,500 & 1,000 & 0 & \\
+6 & 15,125 & 10,500 & 5,375 & 3,500 & 5,000 & 0 \\
 \hline
 \end{tabular}
 \qquad
@@ -375,32 +375,32 @@ $j \backslash i$ & 1 & 2 & 3 & 4 & 5 & 6 \\
 \end{tabular}
 \end{center}
 
-La solution optimale est $m[1,6] = 15\,125$ multiplications scalaires.
-En remontant depuis $s[1,6] = 3$, on obtient la parenthésisation :
+The optimal solution is $m[1,6] = 15,125$ scalar multiplications.
+Tracing back from $s[1,6] = 3$, we obtain the parenthesization:
 \[
   \bigl(A_1 \,(A_2\,A_3)\bigr)\bigl((A_4\,A_5)\,A_6\bigr)
 \]
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Reconstruction de la parenthésisation optimale}
+\subsection{Reconstructing the Optimal Parenthesization}
 
-La table $s$ permet de reconstruire récursivement la parenthésisation :
+Table $s$ allows for recursively reconstructing the parenthesization:
 
 \begin{algorithm}[H]
 \caption{Print-Optimal-Parens($s$, $i$, $j$)}
 \begin{algorithmic}[1]
 \If{$i = j$}
-    \State \textbf{afficher} ``$A_i$''
+    \State \textbf{print} ``$A_i$''
 \Else
-    \State \textbf{afficher} ``(''
+    \State \textbf{print} ``(''
     \State \Call{Print-Optimal-Parens}{$s$, $i$, $s[i,j]$}
     \State \Call{Print-Optimal-Parens}{$s$, $s[i,j]+1$, $j$}
-    \State \textbf{afficher} ``)''
+    \State \textbf{print} ``)''
 \EndIf
 \end{algorithmic}
 \end{algorithm}
 
-\textbf{Trace pour l'exemple ($i=1$, $j=6$) :}
+\textbf{Trace for the example ($i=1$, $j=6$):}
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth,
@@ -413,21 +413,21 @@ La table $s$ permet de reconstruire récursivement la parenthésisation :
   \draw[->] (r) -- (l);
   \draw[->] (r) -- (r2);
   \node[below=16pt, keyred] at (0, -1.5)
-        {Résultat : $\bigl(A_1\,(A_2\,A_3)\bigr)\bigl((A_4\,A_5)\,A_6\bigr)$};
+        {Result: $\bigl(A_1\,(A_2\,A_3)\bigr)\bigl((A_4\,A_5)\,A_6\bigr)$};
 \end{tikzpicture}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résumé : multiplication de chaînes de matrices}
+\subsection{Summary: Matrix Chain Multiplication}
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Récapitulatif DP – Multiplication de chaînes de matrices}]
+                  title={Summary DP – Matrix Chain Multiplication}]
 \begin{itemize}[noitemsep]
-  \item \textbf{Choix} : où placer la parenthèse la plus externe
+  \item \textbf{Choice}: where to place the outermost parenthesis
         $(A_1 \cdots A_k)(A_{k+1} \cdots A_n)$.
-  \item \textbf{Sous-structure optimale} : les deux sous-chaînes doivent être
-        parenthésées de façon optimale (prouvé par l'argument de cut-and-paste).
-  \item \textbf{Récurrence} :
+  \item \textbf{Optimal substructure}: both subchains must be
+        parenthesized optimally (proven by the cut-and-paste argument).
+  \item \textbf{Recurrence}:
     \[
       m[i,j] =
       \begin{cases}
@@ -437,30 +437,30 @@ La table $s$ permet de reconstruire récursivement la parenthésisation :
         & \text{si } i < j.
       \end{cases}
     \]
-  \item \textbf{Complexité} : $\Theta(n^3)$ en temps, $\Theta(n^2)$ en espace.
-  \item \textbf{Reconstruction} : table auxiliaire $s$ + \textsc{Print-Optimal-Parens}.
+  \item \textbf{Complexity}: $\Theta(n^3)$ in time, $\Theta(n^2)$ in space.
+  \item \textbf{Reconstruction}: auxiliary table $s$ + \textsc{Print-Optimal-Parens}.
 \end{itemize}
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Recette générale pour la DP (consolidation)}
+\subsection{General Recipe for DP (Consolidation)}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.45}
 \begin{tabular}{llcl}
 \toprule
-\textbf{Problème} & \textbf{Choix} & \textbf{Complexité} & \textbf{Taille de la table} \\
+\textbf{Problem} & \textbf{Choice} & \textbf{Complexity} & \textbf{Table Size} \\
 \midrule
-Coupe de tiges     & Position de la coupe gauche & $\Theta(n^2)$   & $n+1$ entrées \\
-Rendu de monnaie   & Dénomination utilisée       & $O(nW)$         & $W+1$ entrées \\
-Chaînes de matrices & Position de la parenthèse  & $\Theta(n^3)$   & $n^2$ entrées \\
+Rod Cutting      & Left cut position      & $\Theta(n^2)$   & $n+1$ entries \\
+Coin Change      & Denomination used       & $O(nW)$         & $W+1$ entries \\
+Matrix Chains    & Parenthesis position  & $\Theta(n^3)$   & $n^2$ entries \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Les trois étapes systématiques restent :
+The three systematic steps remain:
 \begin{enumerate}
-  \item Identifier les choix et la sous-structure optimale.
-  \item Écrire la récurrence pour la valeur optimale.
-  \item Résoudre efficacement (top-down avec mémoïsation ou bottom-up).
+  \item Identify choices and optimal substructure.
+  \item Write the recurrence for the optimal value.
+  \item Solve efficiently (top-down with memoization or bottom-up).
 \end{enumerate}

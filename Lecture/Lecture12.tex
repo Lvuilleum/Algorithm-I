@@ -1,20 +1,20 @@
 % ══════════════════════════════════════════════════════════════════════════════
-% Lecture 12 : Graphes – Représentations, BFS, DFS
+% Lecture 12: Graphs – Representations, BFS, DFS
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ══════════════════════════════════════════════════════════════════════════════
-\section*{Graphes}
-\addcontentsline{toc}{subsection}{Graphes – Représentations, BFS et DFS}
+\section*{Graphs}
+\addcontentsline{toc}{subsection}{Graphs – Representations, BFS and DFS}
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Définitions et représentations}
+\subsection{Definitions and Representations}
 
-\begin{definition}{Graphe}{graph}
-Un \textbf{graphe} $G = (V, E)$ est constitué d'un ensemble de \textbf{sommets}
-$V$ et d'un ensemble d'\textbf{arêtes} $E$ contenant des paires (ordonnées ou non)
-de sommets. Un graphe peut être \emph{non orienté}, \emph{orienté},
-\emph{pondéré sur les sommets}, \emph{pondéré sur les arêtes}, etc.
+\begin{definition}{Graph}{graph}
+A \textbf{graph} $G = (V, E)$ consists of a set of \textbf{vertices}
+$V$ and a set of \textbf{edges} $E$ containing pairs (ordered or unordered)
+of vertices. A graph can be \emph{undirected}, \emph{directed},
+\emph{vertex-weighted}, \emph{edge-weighted}, etc.
 \end{definition}
 
 \begin{center}
@@ -28,7 +28,7 @@ de sommets. Un graphe peut être \emph{non orienté}, \emph{orienté},
   \node (5u) at (0, 0) {5};
   \draw (1u)--(2u); \draw (1u)--(5u); \draw (2u)--(4u);
   \draw (3u)--(4u); \draw (4u)--(5u);
-  \node[draw=none, fill=none] at (1.4, -0.7) {\textit{Graphe non orienté}};
+  \node[draw=none, fill=none] at (1.4, -0.7) {\textit{Undirected graph}};
 
   % Directed graph
   \begin{scope}[xshift=4.8cm, ->, >=Stealth]
@@ -41,81 +41,81 @@ de sommets. Un graphe peut être \emph{non orienté}, \emph{orienté},
   \draw (1d)--(2d); \draw (2d)--(3d);
   \draw (4d)--(5d); \draw (5d)--(6d);
   \draw (1d)--(4d); \draw (2d)--(5d); \draw (3d)--(6d);
-  \node[draw=none, fill=none] at (1.2, -0.7) {\textit{Graphe orienté}};
+  \node[draw=none, fill=none] at (1.2, -0.7) {\textit{Directed graph}};
   \end{scope}
 \end{tikzpicture}
 \end{center}
 
-\subsubsection{Listes d'adjacence}
+\subsubsection{Adjacency Lists}
 
-On maintient un tableau $\mathit{Adj}$ de $|V|$ listes : la liste de $u$ contient
-tous les sommets $v$ tels que $(u, v) \in E$. On note $G.\mathit{Adj}[u]$ dans les
-algorithmes.
-
-\begin{center}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{lll}
-\toprule
-\textbf{Opération} & \textbf{Coût} & \\
-\midrule
-Espace & $\Theta(V + E)$ & compact pour les graphes creux \\
-Lister les voisins de $u$ & $\Theta(\deg(u))$ & \\
-Tester $(u,v) \in E$ & $O(\deg(u))$ & \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\subsubsection{Matrice d'adjacence}
-
-Une matrice $|V| \times |V|$ où $a_{ij} = 1$ si $(i,j) \in E$, 0 sinon.
+We maintain an array $\mathit{Adj}$ of $|V|$ lists: the list for $u$ contains
+all vertices $v$ such that $(u, v) \in E$. We denote this as $G.\mathit{Adj}[u]$ in
+algorithms.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{lll}
 \toprule
-\textbf{Opération} & \textbf{Coût} & \\
+\textbf{Operation} & \textbf{Cost} & \\
 \midrule
-Espace & $\Theta(V^2)$ & dense, simple à implémenter \\
-Lister les voisins de $u$ & $\Theta(V)$ & \\
-Tester $(u,v) \in E$ & $\Theta(1)$ & \\
+Space & $\Theta(V + E)$ & compact for sparse graphs \\
+List neighbors of $u$ & $\Theta(\deg(u))$ & \\
+Test $(u,v) \in E$ & $O(\deg(u))$ & \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\begin{remark}{Choix de la représentation}{graphrep}
-Les deux représentations peuvent être étendues aux graphes pondérés.
-Pour les graphes \emph{creux} ($|E| \ll |V|^2$), les listes d'adjacence sont
-préférables en espace. La matrice est avantageuse quand on teste souvent
-l'appartenance d'une arête.
+\subsubsection{Adjacency Matrix}
+
+A $|V| \times |V|$ matrix where $a_{ij} = 1$ if $(i,j) \in E$, and 0 otherwise.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{Cost} & \\
+\midrule
+Space & $\Theta(V^2)$ & dense, simple to implement \\
+List neighbors of $u$ & $\Theta(V)$ & \\
+Test $(u,v) \in E$ & $\Theta(1)$ & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{remark}{Choice of Representation}{graphrep}
+Both representations can be extended to weighted graphs.
+For \emph{sparse} graphs ($|E| \ll |V|^2$), adjacency lists are
+preferable for space. The matrix is advantageous when edge membership
+is tested frequently.
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Parcours en largeur (BFS)}
+\subsection{Breadth-First Search (BFS)}
 
 \begin{definition}{Breadth-First Search (BFS)}{bfs}
-\textbf{Entrée :} graphe $G = (V,E)$ (orienté ou non), sommet source $s \in V$.
+\textbf{Input:} graph $G = (V,E)$ (directed or undirected), source vertex $s \in V$.
 
-\textbf{Sortie :} pour tout sommet $v$, $v.d$ = distance minimale (en nombre
-d'arêtes) de $s$ à $v$.
+\textbf{Output:} for every vertex $v$, $v.d$ = shortest distance (in number of
+edges) from $s$ to $v$.
 \end{definition}
 
-\textbf{Idée :} émettre une vague depuis $s$. Elle atteint d'abord tous les
-sommets à distance~1, puis à distance~2, etc. On utilise une \emph{file} (FIFO).
+\textbf{Idea:} send out a wave from $s$. It reaches all vertices at distance 1 first,
+then at distance 2, etc. We use a \emph{queue} (FIFO).
 
 \subsubsection{Pseudocode}
 
 \begin{algorithm}[H]
 \caption{BFS($G$, $s$)}
 \begin{algorithmic}[1]
-\For{chaque sommet $u \in G.V \setminus \{s\}$}
+\For{each vertex $u \in G.V \setminus \{s\}$}
     \State $u.d \leftarrow \infty$
 \EndFor
 \State $s.d \leftarrow 0$
 \State $Q \leftarrow \emptyset$;\; \textsc{Enqueue}$(Q, s)$
 \While{$Q \ne \emptyset$}
     \State $u \leftarrow \textsc{Dequeue}(Q)$
-    \For{chaque $v \in G.\mathit{Adj}[u]$}
-        \If{$v.d = \infty$}           \AlgComment{$v$ non encore découvert}
+    \For{each $v \in G.\mathit{Adj}[u]$}
+        \If{$v.d = \infty$}           \AlgComment{$v$ not yet discovered}
             \State $v.d \leftarrow u.d + 1$
             \State \textsc{Enqueue}$(Q, v)$
         \EndIf
@@ -124,9 +124,9 @@ sommets à distance~1, puis à distance~2, etc. On utilise une \emph{file} (FIFO
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{Exemple de BFS}
+\subsubsection{BFS Example}
 
-Graphe à 9 sommets $\{s, a, b, c, d, e, f, g, h\}$ depuis la source $s$ :
+Graph with 9 vertices $\{s, a, b, c, d, e, f, g, h\}$ from source $s$:
 
 \begin{center}
 \begin{tikzpicture}[font=\small,
@@ -141,7 +141,7 @@ Graphe à 9 sommets $\{s, a, b, c, d, e, f, g, h\}$ depuis la source $s$ :
   \node[done] (b) at (0,-1.2) {$b$}; \node[above=2pt] at (b.north) {\tiny 3};
   \node[done] (e) at (3.0,2.4){$e$}; \node[above=2pt] at (e.north) {\tiny 3};
   \node[done] (g) at (1.5,-1.2){$g$};\node[above=2pt] at (g.north) {\tiny 3};
-  \node[done] (h) at (3.0,0)  {$h$}; \node[above=2pt] at (h.north) {\tiny 3};
+  \node[done] (h) at (3.0,0)   {$h$}; \node[above=2pt] at (h.north) {\tiny 3};
 
   \draw (s)--(a); \draw (s)--(c);
   \draw (a)--(d); \draw (c)--(d); \draw (c)--(f);
@@ -150,46 +150,46 @@ Graphe à 9 sommets $\{s, a, b, c, d, e, f, g, h\}$ depuis la source $s$ :
 \end{tikzpicture}
 \end{center}
 
-L'ordre de découverte est : $s \to a, c \to d \to f, b \to e, g, h$.
-Les distances finales sont bien les distances dans le graphe.
+The discovery order is: $s \to a, c \to d \to f, b \to e, g, h$.
+The final distances are indeed the distances in the graph.
 
-\subsubsection{Analyse}
+\subsubsection{Analysis}
 
 \begin{complexity}{BFS}{bfscplx}
 \begin{itemize}[noitemsep]
-  \item Chaque sommet est mis en file au plus une fois : $O(V)$.
-  \item Chaque arête est examinée au plus une fois (orienté) ou deux fois
-        (non orienté) : $O(E)$.
-  \item \textbf{Complexité totale : $O(V + E)$.}
+  \item Each vertex is enqueued at most once: $O(V)$.
+  \item Each edge is examined at most once (directed) or twice
+        (undirected): $O(E)$.
+  \item \textbf{Total complexity: $O(V + E)$.}
 \end{itemize}
 \end{complexity}
 
-\textbf{Note :} BFS ne visite pas forcément tous les sommets (seulement ceux
-atteignables depuis $s$). On peut enregistrer l'\emph{arbre BFS} en mémorisant
-l'arête qui a découvert chaque sommet ($v.\pi \leftarrow u$).
+\textbf{Note:} BFS does not necessarily visit all vertices (only those
+reachable from $s$). One can record the \emph{BFS tree} by storing
+the edge that discovered each vertex ($v.\pi \leftarrow u$).
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Parcours en profondeur (DFS)}
+\subsection{Depth-First Search (DFS)}
 
 \begin{definition}{Depth-First Search (DFS)}{dfs}
-\textbf{Entrée :} graphe $G = (V,E)$, orienté ou non.
+\textbf{Input:} graph $G = (V,E)$, directed or undirected.
 
-\textbf{Sortie :} pour tout sommet $v$, deux horodatages :
-$v.d$ (temps de \emph{découverte}) et $v.f$ (temps de \emph{fin}).
+\textbf{Output:} for every vertex $v$, two timestamps:
+$v.d$ (\emph{discovery} time) and $v.f$ (\emph{finishing} time).
 \end{definition}
 
-\textbf{Idée :} explorer chaque arête à fond avant de revenir en arrière.
-Dès qu'un sommet est découvert, on explore depuis lui (contrairement à BFS
-qui explore d'abord les proches). On repart d'un nouveau sommet non découvert
-si nécessaire.
+\textbf{Idea:} explore each edge as far as possible before backtracking.
+As soon as a vertex is discovered, we explore from it (unlike BFS which
+explores nearby vertices first). We restart from a new undiscovered
+vertex if necessary.
 
-\subsubsection{Couleurs des sommets}
+\subsubsection{Vertex Colors}
 
-Durant l'exécution, chaque sommet a une couleur :
+During execution, each vertex has a color:
 \begin{itemize}[noitemsep]
-  \item \textbf{BLANC} : non découvert.
-  \item \textbf{GRIS} : découvert mais non terminé (exploration en cours depuis lui).
-  \item \textbf{NOIR} : terminé (tout ce qui est atteignable depuis lui a été exploré).
+  \item \textbf{WHITE}: undiscovered.
+  \item \textbf{GRAY}: discovered but not finished (exploration in progress from it).
+  \item \textbf{BLACK}: finished (everything reachable from it has been explored).
 \end{itemize}
 
 \subsubsection{Pseudocode}
@@ -197,12 +197,12 @@ Durant l'exécution, chaque sommet a une couleur :
 \begin{algorithm}[H]
 \caption{DFS($G$)}
 \begin{algorithmic}[1]
-\For{chaque sommet $u \in G.V$}
-    \State $u.\mathit{color} \leftarrow \text{BLANC}$
+\For{each vertex $u \in G.V$}
+    \State $u.\mathit{color} \leftarrow \text{WHITE}$
 \EndFor
 \State $\mathit{time} \leftarrow 0$
-\For{chaque sommet $u \in G.V$}
-    \If{$u.\mathit{color} = \text{BLANC}$}
+\For{each vertex $u \in G.V$}
+    \If{$u.\mathit{color} = \text{WHITE}$}
         \State \Call{DFS-Visit}{$G$, $u$}
     \EndIf
 \EndFor
@@ -213,22 +213,22 @@ Durant l'exécution, chaque sommet a une couleur :
 \caption{DFS-Visit($G$, $u$)}
 \begin{algorithmic}[1]
 \State $\mathit{time} \leftarrow \mathit{time} + 1$
-\State $u.d \leftarrow \mathit{time}$            \AlgComment{horodatage découverte}
-\State $u.\mathit{color} \leftarrow \text{GRIS}$
-\For{chaque $v \in G.\mathit{Adj}[u]$}
-    \If{$v.\mathit{color} = \text{BLANC}$}
+\State $u.d \leftarrow \mathit{time}$             \AlgComment{discovery timestamp}
+\State $u.\mathit{color} \leftarrow \text{GRAY}$
+\For{each $v \in G.\mathit{Adj}[u]$}
+    \If{$v.\mathit{color} = \text{WHITE}$}
         \State \Call{DFS-Visit}{$G$, $v$}
     \EndIf
 \EndFor
-\State $u.\mathit{color} \leftarrow \text{NOIR}$
+\State $u.\mathit{color} \leftarrow \text{BLACK}$
 \State $\mathit{time} \leftarrow \mathit{time} + 1$
-\State $u.f \leftarrow \mathit{time}$            \AlgComment{horodatage fin}
+\State $u.f \leftarrow \mathit{time}$             \AlgComment{finishing timestamp}
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{Exemple de DFS}
+\subsubsection{DFS Example}
 
-Graphe à 8 sommets $\{a,b,c,d,e,f,g,h\}$, horodatages $d/f$ :
+Graph with 8 vertices $\{a,b,c,d,e,f,g,h\}$, timestamps $d/f$:
 
 \begin{center}
 \begin{tikzpicture}[font=\small,
@@ -254,51 +254,50 @@ Graphe à 8 sommets $\{a,b,c,d,e,f,g,h\}$, horodatages $d/f$ :
 \end{tikzpicture}
 \end{center}
 
-La forêt DFS contient ici deux arbres enracinés en $b$ (temps 1) et en $e$ (temps 13).
+The DFS forest here contains two trees rooted at $b$ (time 1) and $e$ (time 13).
 
-\subsubsection{Analyse}
+\subsubsection{Analysis}
 
 \begin{complexity}{DFS}{dfscplx}
 \begin{itemize}[noitemsep]
-  \item Chaque sommet est découvert exactement une fois : $\Theta(V)$.
-  \item Chaque arête est examinée exactement une fois (orienté) ou deux fois
-        (non orienté) : $\Theta(E)$.
-  \item \textbf{Complexité totale : $\Theta(V + E)$.}
+  \item Each vertex is discovered exactly once: $\Theta(V)$.
+  \item Each edge is examined exactly once (directed) or twice
+        (undirected): $\Theta(E)$.
+  \item \textbf{Total complexity: $\Theta(V + E)$.}
 \end{itemize}
 \end{complexity}
 
-DFS produit une \textbf{forêt DFS} : une ou plusieurs arborescences, chacune
-issue d'un appel de \textsc{DFS-Visit} dans la boucle principale.
+DFS produces a \textbf{DFS forest}: one or more trees, each originating
+from a \textsc{DFS-Visit} call in the main loop.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Classification des arêtes (DFS)}
+\subsection{Edge Classification (DFS)}
 
-Dans un DFS, chaque arête $(u,v)$ peut être classifiée selon les horodatages :
+In a DFS, each edge $(u,v)$ can be classified according to its timestamps:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.35}
 \begin{tabular}{lll}
 \toprule
-\textbf{Type} & \textbf{Définition} & \textbf{Condition} \\
+\textbf{Type} & \textbf{Definition} & \textbf{Condition} \\
 \midrule
-\textbf{Arête d'arbre} & dans la forêt DFS & $v$ était BLANC quand $(u,v)$ exploré \\
-\textbf{Arête arrière} & $(u,v)$ : $u$ est descendant de $v$ & $v.d < u.d < u.f < v.f$ \\
-\textbf{Arête avant}   & $(u,v)$ : $v$ est descendant de $u$, \newline mais pas via arbre & $u.d < v.d < v.f < u.f$ \\
-\textbf{Arête croisée} & toute autre arête & $v.f < u.d$ \\
+\textbf{Tree edge}    & in the DFS forest & $v$ was WHITE when $(u,v)$ explored \\
+\textbf{Back edge}    & $(u,v)$: $u$ is descendant of $v$ & $v.d < u.d < u.f < v.f$ \\
+\textbf{Forward edge} & $(u,v)$: $v$ is descendant of $u$, \newline but not via tree & $u.d < v.d < v.f < u.f$ \\
+\textbf{Cross edge}   & any other edge & $v.f < u.d$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\begin{remark}{Graphes non orientés}{undirected}
-Dans le DFS d'un graphe \emph{non orienté}, on n'obtient que des arêtes d'arbre
-et des arêtes arrière — jamais d'arêtes avant ni d'arêtes croisées. En effet, si
-$(u,v)$ est examiné depuis $u$ et que $v$ est déjà GRIS ou NOIR, alors $v$ est
-nécessairement un ancêtre de $u$ dans l'arbre courant, ce qui donne une arête
-arrière.
+\begin{remark}{Undirected Graphs}{undirected}
+In the DFS of an \emph{undirected} graph, we only obtain tree edges and
+back edges — never forward edges or cross edges. Indeed, if $(u,v)$ is examined
+from $u$ and $v$ is already GRAY or BLACK, then $v$ is necessarily an ancestor
+of $u$ in the current tree, which results in a back edge.
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résumé : BFS et DFS}
+\subsection{Summary: BFS and DFS}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.45}
@@ -306,12 +305,12 @@ arrière.
 \toprule
 & \textbf{BFS} & \textbf{DFS} \\
 \midrule
-Structure utilisée & File (FIFO) & Pile (récursion) \\
-Ordre d'exploration & Par distance croissante & En profondeur d'abord \\
-Sortie principale & Distances $v.d$ depuis $s$ & Horodatages $v.d$, $v.f$ \\
-Complexité & $O(V+E)$ & $\Theta(V+E)$ \\
-Atteint tout le graphe & Non (depuis $s$ seulement) & Oui (si on boucle sur tous les sommets) \\
-Applications & Plus court chemin (non pondéré) & Tri topologique, composantes connexes \\
+Structure used & Queue (FIFO) & Stack (recursion) \\
+Exploration order & By increasing distance & Depth-first \\
+Main output & Distances $v.d$ from $s$ & Timestamps $v.d$, $v.f$ \\
+Complexity & $O(V+E)$ & $\Theta(V+E)$ \\
+Reaches whole graph & No (from $s$ only) & Yes (if looping through all vertices) \\
+Applications & Shortest path (unweighted) & Topological sort, connected components \\
 \bottomrule
 \end{tabular}
 \end{center}

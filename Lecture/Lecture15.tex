@@ -1,0 +1,237 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 15: Flows and Cuts – Max-Flow Min-Cut Theorem
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Full Example of Ford-Fulkerson}
+
+To illustrate the method, here is the evolution of the flow on a network with 
+integer capacities until the optimum $|f| = 29$:
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.62cm, inner sep=1pt}]
+  \node[node, fill=green!20] (s)  at (0,   1.5) {$s$};
+  \node[node]                (a)  at (1.6,  3)  {$a$};
+  \node[node]                (b)  at (1.6,  1.5){$b$};
+  \node[node]                (c)  at (1.6,  0)  {$c$};
+  \node[node]                (d)  at (3.2,  3)  {$d$};
+  \node[node]                (e)  at (3.2,  1.5){$e$};
+  \node[node]                (f)  at (3.2,  0)  {$f$};
+  \node[node]                (g)  at (4.8,  3)  {$g$};
+  \node[node]                (h)  at (4.8,  0)  {$h$};
+  \node[node, fill=red!20]   (t)  at (6.4,  1.5){$t$};
+
+  % Final optimal flow f/c
+  \draw[->,thick] (s) -- node[above,font=\tiny]{10/10}(a);
+  \draw[->,thick] (s) -- node[right,font=\tiny]{5/5} (b);
+  \draw[->,thick] (s) -- node[below,font=\tiny]{14/15}(c);
+  \draw[->,thick] (a) -- node[above,font=\tiny]{2/2} (d);
+  \draw[->,thick] (a) -- node[above,font=\tiny]{9/9} (e);
+  \draw[->,thick] (b) -- node[right,font=\tiny]{7/8} (e);
+  \draw[->,thick] (c) -- node[below,font=\tiny]{4/4} (f);
+  \draw[->,thick] (c) -- node[below,font=\tiny]{6/6} (e);
+  \draw[->,thick] (d) -- node[above,font=\tiny]{3/15}(g);
+  \draw[->,thick] (e) -- node[right,font=\tiny]{0/15}(g);
+  \draw[->,thick] (e) -- node[right,font=\tiny]{0/15}(h);
+  \draw[->,thick] (f) -- node[below,font=\tiny]{16/16}(h);
+  \draw[->,thick] (g) -- node[above,font=\tiny]{9/10} (t);
+  \draw[->,thick] (h) -- node[below,font=\tiny]{10/10}(t);
+  \node[below=6pt, keyred, font=\small] at (3.2, -0.7)
+        {Optimal flow: $|f| = 29$ — no augmenting path in $G_f$};
+\end{tikzpicture}
+\end{center}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Cuts in Flow Networks}
+\addcontentsline{toc}{subsection}{Cuts and Max-Flow Min-Cut Theorem}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Definition of a Cut}
+
+\begin{definition}{Cut}{cut}
+A \textbf{cut} of the flow network $G = (V, E)$ is a partition of $V$ into
+two sets $S$ and $T = V \setminus S$ such that $s \in S$ and $t \in T$.
+\end{definition}
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.65cm, inner sep=1pt}]
+  \node[node, fill=green!20] (s)  at (0, 1)   {$s$};
+  \node[node, fill=blue!20]  (v1) at (2, 2)   {$v_1$};
+  \node[node, fill=blue!20]  (v2) at (2, 0)   {$v_2$};
+  \node[node, fill=orange!20](v3) at (4, 2)   {$v_3$};
+  \node[node, fill=orange!20](v4) at (4, 0)   {$v_4$};
+  \node[node, fill=red!20]   (t)  at (6, 1)   {$t$};
+
+  \draw[->, thick] (s)  -- node[above,font=\tiny]{11/16}(v1);
+  \draw[->, thick] (s)  -- node[below,font=\tiny]{8/13} (v2);
+  \draw[->, thick] (v1) -- node[above,font=\tiny]{12/12}(v3);
+  \draw[->, thick] (v1) -- node[right,font=\tiny]{0/4}  (v2);
+  \draw[->, thick] (v2) -- node[below,font=\tiny]{11/14}(v4);
+  \draw[->, thick] (v2) -- node[left, font=\tiny]{0/9}  (v3);
+  \draw[->, thick] (v3) -- node[above,font=\tiny]{19/20}(t);
+  \draw[->, thick] (v4) -- node[below,font=\tiny]{7/7}  (t);
+  \draw[->, thick] (v4) -- node[right,font=\tiny]{4/4}  (v3);
+
+  % Cut boundary
+  \draw[keyred, dashed, very thick] (3, -0.6) -- (3, 2.6)
+        node[above, keyred]{cut $(S,T)$};
+  \node[keyblue, font=\bfseries\tiny] at (1, 2.4) {$S = \{s, v_1, v_2\}$};
+  \node[keyred,  font=\bfseries\tiny] at (5, 2.4) {$T = \{v_3, v_4, t\}$};
+\end{tikzpicture}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Net Flow and Capacity of a Cut}
+
+\begin{definition}{Net Flow and Capacity of a Cut}{cutflow}
+The \textbf{net flow} through the cut $(S, T)$ is:
+\[
+  f(S, T) = \underbrace{\sum_{u \in S,\, v \in T} f(u,v)}_{\text{flow leaving }S}
+            - \underbrace{\sum_{u \in S,\, v \in T} f(v,u)}_{\text{flow entering }S}.
+\]
+
+The \textbf{capacity} of the cut is:
+\[
+  c(S, T) = \sum_{u \in S,\, v \in T} c(u, v).
+\]
+\end{definition}
+
+\textbf{Example} (cut $S = \{s, v_1, v_2\}$):
+the net flow is $12 + 11 - 4 = 19$ and the capacity is $12 + 14 = 26$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Net Flow is Always Equal to the Flow Value}
+
+\begin{theorem}{Net Flow = Flow Value}{netflow}
+For any cut $(S, T)$,
+\[
+  |f| = f(S, T).
+\]
+\end{theorem}
+
+\begin{proof}
+By induction on $|S|$.
+
+\textbf{Base Case} ($S = \{s\}$): $f(\{s\}, T) = \sum_v f(s,v) - \sum_v f(v,s) = |f|$
+by definition of the flow value.
+
+\textbf{Inductive Step} ($S = S' \cup \{w\}$): when adding $w$ to $S'$,
+the edges between $w$ and $S'$ move from the boundary to the interior of $S$.
+The net flow variation is exactly
+$\text{flow entering }w - \text{flow leaving }w = 0$
+by flow conservation ($w \ne s, t$). Therefore $f(S, T) = f(S', T)$ and the value remains $|f|$.
+\end{proof}
+
+\textbf{Immediate Consequence:} since $f(u,v) \ge 0$ and $f(u,v) \le c(u,v)$,
+\[
+  |f| = f(S,T) \le \sum_{u \in S, v \in T} f(u,v) \le \sum_{u \in S, v \in T} c(u,v) = c(S,T).
+\]
+
+Thus \textbf{every flow is bounded by the capacity of any cut}, which implies:
+\[
+  \text{max-flow} \le \text{min-cut}.
+\]
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Max-Flow Min-Cut Theorem}
+
+\begin{theorem}{Max-Flow Min-Cut}{maxflowmincut}
+Let $G = (V, E)$ be a flow network with source $s$, sink $t$ and capacities $c$.
+The following three assertions are equivalent:
+\begin{enumerate}
+  \item $f$ is a \textbf{maximum} flow.
+  \item $G_f$ has \textbf{no augmenting path}.
+  \item $|f| = c(S, T)$ for a \textbf{minimum} cut $(S, T)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textbf{$(1) \Rightarrow (2)$:} Suppose by contradiction that $G_f$ has
+an augmenting path $p$. The Ford-Fulkerson method would augment $f$ along
+$p$, increasing the flow value, which contradicts that $f$ is maximum.
+
+\textbf{$(2) \Rightarrow (3)$:} Let $S = \{v \in V : \text{there exists a path from } s
+\text{ to } v \text{ in } G_f\}$ and $T = V \setminus S$.
+By assumption, $t \notin S$, so $(S,T)$ is a valid cut.
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Every edge $(u,v)$ leaving $S$ in $G$} has $f(u,v) = c(u,v)$
+        (saturated). Otherwise $c_f(u,v) = c(u,v) - f(u,v) > 0$ and $v$ would be reachable
+        from $s$ in $G_f$, contradicting $v \notin S$.
+
+  \item \textbf{Every edge $(v,u)$ entering $S$ from $T$ in $G$} has $f(v,u) = 0$.
+        Otherwise $c_f(u,v) = f(v,u) > 0$ and $v$ would be reachable from $s$ in $G_f$.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.55cm, inner sep=1pt}]
+  % Left: original graph with saturated/zero edges
+  \begin{scope}[xshift=0cm]
+    \node[draw, ellipse, fill=blue!10, minimum width=2cm, minimum height=1.4cm]
+          at (0.4, 0) {};
+    \node[font=\bfseries\small, keyblue] at (0.4, 0) {$S$};
+    \node[draw, ellipse, fill=orange!10, minimum width=1.6cm, minimum height=1.4cm]
+          at (3.0, 0) {};
+    \node[font=\bfseries\small, keyred] at (3.0, 0) {$T$};
+    \draw[->, keyred, very thick] (1.4, 0.3) -- node[above,font=\tiny,keyred]{$f=c$ (saturated)} (2.2, 0.3);
+    \draw[->, keygreen, very thick] (2.2, -0.3) -- node[below,font=\tiny,keygreen]{$f=0$} (1.4, -0.3);
+    \node[below=14pt] at (1.8, -0.6) {\textit{graph $G$}};
+  \end{scope}
+  % Right: residual network
+  \begin{scope}[xshift=5.5cm]
+    \node[draw, ellipse, fill=blue!10, minimum width=2cm, minimum height=1.4cm]
+          at (0.4, 0) {};
+    \node[font=\bfseries\small, keyblue] at (0.4, 0) {$S$};
+    \node[draw, ellipse, fill=orange!10, minimum width=1.6cm, minimum height=1.4cm]
+          at (3.0, 0) {};
+    \node[font=\bfseries\small, keyred] at (3.0, 0) {$T$};
+    \draw[->, keyred, very thick] (2.2, 0.3) -- node[above,font=\tiny,keyred]{$c_f = c-c = 0$} (1.4, 0.3);
+    \node[below=14pt] at (1.8, -0.6) {\textit{residual network $G_f$}};
+    \node[gray, font=\tiny] at (1.8, -0.1) {(no edge toward $T$)};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+Therefore:
+\[
+  |f| = f(S,T) = \sum_{\substack{u\in S\\v\in T}} f(u,v) - \sum_{\substack{u\in S\\v\in T}} f(v,u)
+       = \sum_{\substack{u\in S\\v\in T}} c(u,v) - 0 = c(S,T).
+\]
+
+\textbf{$(3) \Rightarrow (1)$:} Since $|f| \le c(S,T)$ for any cut,
+if $|f| = c(S,T)$ for a minimum cut, the flow cannot be improved. Thus $f$ is maximum.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Illustration on the Example}
+
+In the 7-node network (optimal flow $|f| = 29$), the minimum cut identified by
+$S = \{s\} \cup \{\text{nodes reachable from }s\text{ in }G_f\}$ satisfies
+$c(S,T) = 29$: the edges of the cut are exactly saturated, and no augmenting
+path exists in $G_f$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points – Flows and Cuts}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Cut $(S,T)$}: partition $V = S \cup T$ with $s \in S$, $t \in T$.
+  \item \textbf{Net Flow} $f(S,T) = \sum_{S \to T} f - \sum_{T \to S} f$.
+  \item \textbf{Capacity} $c(S,T) = \sum_{u\in S, v\in T} c(u,v)$.
+  \item \textbf{Fundamental Identity:} $|f| = f(S,T)$ for any cut,
+        hence $|f| \le c(S,T)$.
+  \item \textbf{Max-Flow Min-Cut Theorem:}
+    \[
+      \max |f| = \min c(S,T).
+    \]
+    Three equivalent conditions: max flow $\Leftrightarrow$ no augmenting
+    path in $G_f$ $\Leftrightarrow$ flow equals min-cut capacity.
+  \item \textbf{Ford-Fulkerson returns an optimal flow} because it stops
+        precisely when condition (2) is verified.
+\end{itemize}
+\end{tcolorbox}

@@ -1,44 +1,44 @@
 % ══════════════════════════════════════════════════════════════════════════════
-% Lecture 11 : Programmation Dynamique – Arbres Binaires de Recherche Optimaux
+% Lecture 11: Dynamic Programming – Optimal Binary Search Trees
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ══════════════════════════════════════════════════════════════════════════════
-\section*{Arbres Binaires de Recherche Optimaux (OBST)}
-\addcontentsline{toc}{subsection}{Arbres Binaires de Recherche Optimaux}
+\section*{Optimal Binary Search Trees (OBST)}
+\addcontentsline{toc}{subsection}{Optimal Binary Search Trees}
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Motivation}
 
-Dans un moteur de recherche, certains termes sont recherchés bien plus souvent que
-d'autres. Si l'on stocke les clés dans un ABR, l'ordre de recherche dépend de la
-structure de l'arbre. Placer les clés les plus fréquentes près de la racine permet
-de minimiser le coût moyen d'une recherche. Le problème de l'OBST formalise cette idée.
+In a search engine, certain terms are searched much more often than others. If we
+store keys in a BST, the search order depends on the tree's structure. Placing the
+most frequent keys near the root minimizes the average cost of a search. The OBST
+problem formalizes this idea.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Définition du problème}
+\subsection{Problem Definition}
 
-\begin{definition}{Arbre Binaire de Recherche Optimal}{obst}
-\textbf{Entrée :} une séquence triée de $n$ clés distinctes
-$K = \langle k_1 < k_2 < \cdots < k_n \rangle$, avec pour chaque $k_i$ une
-probabilité de recherche $p_i > 0$ (avec $\sum_{i=1}^n p_i = 1$).
+\begin{definition}{Optimal Binary Search Tree}{obst}
+\textbf{Input:} a sorted sequence of $n$ distinct keys
+$K = \langle k_1 < k_2 < \cdots < k_n \rangle$, with a search probability 
+$p_i > 0$ for each $k_i$ (where $\sum_{i=1}^n p_i = 1$).
 
-\textbf{Objectif :} construire un ABR $T$ sur ces clés qui minimise le coût
-de recherche espéré :
+\textbf{Objective:} construct a BST $T$ on these keys that minimizes the expected
+search cost:
 \[
-  E[\text{coût de recherche dans } T]
+  E[\text{search cost in } T]
   = \sum_{i=1}^{n} (\depth_T(k_i) + 1)\, p_i
   = 1 + \sum_{i=1}^{n} \depth_T(k_i)\cdot p_i.
 \]
 \end{definition}
 
-Le coût réel d'une recherche de $k_i$ vaut $\depth_T(k_i) + 1$ (nombre de nœuds
-examinés, racine incluse).
+The actual cost of searching for $k_i$ is $\depth_T(k_i) + 1$ (the number of nodes
+examined, including the root).
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Exemple motivant}
+\subsection{Motivating Example}
 
-Avec $n = 5$ clés et les probabilités :
+With $n = 5$ keys and the probabilities:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
@@ -51,7 +51,7 @@ $p_i$ & 0.25 & 0.2 & 0.05 & 0.2 & 0.3 \\
 \end{tabular}
 \end{center}
 
-\textbf{Arbre A} (racine $k_2$) :
+\textbf{Tree A} (root $k_2$):
 
 \begin{center}
 \begin{tikzpicture}[
@@ -86,9 +86,9 @@ $i$ & $\depth_T(k_i)$ & $\depth_T(k_i) \cdot p_i$ \\
 \end{tabular}
 \end{center}
 
-$E[\text{coût}] = 1 + 1.15 = 2.15$.
+$E[\text{cost}] = 1 + 1.15 = 2.15$.
 
-\textbf{Arbre B} (racine $k_2$, mais $k_5$ enfant droit de $k_2$, $k_4$ à gauche de $k_5$, $k_3$ à gauche de $k_4$) :
+\textbf{Tree B} (root $k_2$, but $k_5$ right child of $k_2$, $k_4$ left of $k_5$, $k_3$ left of $k_4$):
 
 \begin{center}
 \begin{tikzpicture}[
@@ -127,117 +127,116 @@ $i$ & $\depth_T(k_i)$ & $\depth_T(k_i) \cdot p_i$ \\
 \end{tabular}
 \end{center}
 
-$E[\text{coût}] = 1 + 1.10 = \mathbf{2.10}$ — cet arbre s'avère être optimal.
+$E[\text{cost}] = 1 + 1.10 = \mathbf{2.10}$ — this tree turns out to be optimal.
 
-\begin{remark}{Observations clés}{obsobs}
+\begin{remark}{Key Observations}{obsobs}
 \begin{itemize}[noitemsep]
-  \item L'OBST n'est \emph{pas} nécessairement l'arbre de hauteur minimale.
-  \item La clé de plus grande probabilité n'est \emph{pas} nécessairement à la racine.
-  \item Le nombre d'ABR à $n$ nœuds est exponentiel (nombres de Catalan $\sim 4^n/n^{3/2}$),
-        donc la force brute est impraticable.
+  \item The OBST is \emph{not} necessarily the tree with minimum height.
+  \item The key with the highest probability is \emph{not} necessarily at the root.
+  \item The number of BSTs with $n$ nodes is exponential (Catalan numbers $\sim 4^n/n^{3/2}$),
+        so brute force is impractical.
 \end{itemize}
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Sous-structure optimale}
+\subsection{Optimal Substructure}
 
-Un ABR se construit en choisissant une racine $k_r$, puis en construisant
-récursivement le sous-arbre gauche sur $k_i, \ldots, k_{r-1}$ et le sous-arbre
-droit sur $k_{r+1}, \ldots, k_j$.
+A BST is built by choosing a root $k_r$, then recursively building the left
+subtree on $k_i, \ldots, k_{r-1}$ and the right subtree on $k_{r+1}, \ldots, k_j$.
 
-\begin{theorem}{Sous-structure optimale de l'OBST}{obstopt}
-Si l'on construit un ABT optimal sur $k_i, \ldots, k_j$ avec racine $k_r$, alors
-les sous-arbres gauche et droit doivent eux aussi être des OBST (sur
-$k_i, \ldots, k_{r-1}$ et $k_{r+1}, \ldots, k_j$ respectivement).
+\begin{theorem}{Optimal Substructure of OBST}{obstopt}
+If we build an optimal BST on $k_i, \ldots, k_j$ with root $k_r$, then the
+left and right subtrees must also be OBSTs (on $k_i, \ldots, k_{r-1}$ and
+$k_{r+1}, \ldots, k_j$ respectively).
 \end{theorem}
 
-\textbf{Analyse du coût.} En notant $w(i,j) = \sum_{\ell=i}^{j} p_\ell$ la somme
-des probabilités sur $k_i, \ldots, k_j$, on observe que quand un sous-arbre devient
-le fils gauche ou droit de la racine, la profondeur de chacun de ses nœuds augmente
-de~1. Donc :
+\textbf{Cost analysis.} Letting $w(i,j) = \sum_{\ell=i}^{j} p_\ell$ be the sum
+of probabilities over $k_i, \ldots, k_j$, we observe that when a subtree becomes
+the left or right child of the root, the depth of each of its nodes increases by 1.
+Therefore:
 
 \[
-  E[\text{coût sous-arbre } k_i \ldots k_j]
-  = p_r + \bigl(w(i,r-1) + E[\text{coût gauche}]\bigr)
-        + \bigl(w(r+1,j) + E[\text{coût droit}]\bigr).
+  E[\text{cost of subtree } k_i \ldots k_j]
+  = p_r + \bigl(w(i,r-1) + E[\text{cost of left}]\bigr)
+        + \bigl(w(r+1,j) + E[\text{cost of right}]\bigr).
 \]
 
-En regroupant, on obtient :
+By regrouping, we get:
 \[
-  E[\text{coût}] = p_r + w(i,r-1) + E[\text{coût gauche}] + w(r+1,j) + E[\text{coût droit}]
-                 = w(i,j) + E[\text{coût gauche}] + E[\text{coût droit}].
+  E[\text{cost}] = p_r + w(i,r-1) + E[\text{cost of left}] + w(r+1,j) + E[\text{cost of right}]
+                 = w(i,j) + E[\text{cost of left}] + E[\text{cost of right}].
 \]
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Formulation récursive}
+\subsection{Recursive Formulation}
 
-Définissons $e[i,j]$ comme le coût de recherche espéré de l'OBST construit sur
-$k_i, \ldots, k_j$, et $w(i,j) = \sum_{\ell=i}^{j} p_\ell$.
+Let us define $e[i,j]$ as the expected search cost of the OBST built on
+$k_i, \ldots, k_j$, and $w(i,j) = \sum_{\ell=i}^{j} p_\ell$.
 
 \[
   e[i, j] =
   \begin{cases}
-    0 & \text{si } i = j + 1 \quad (\text{sous-arbre vide}), \\[6pt]
+    0 & \text{if } i = j + 1 \quad (\text{empty subtree}), \\[6pt]
     \displaystyle\min_{i \le r \le j}
       \bigl\{ e[i, r-1] + e[r+1, j] + w(i,j) \bigr\}
-    & \text{si } i \le j.
+    & \text{if } i \le j.
   \end{cases}
 \]
 
-On veut calculer $e[1, n]$.
+We want to calculate $e[1, n]$.
 
-\begin{remark}{Lien avec la somme des probabilités}{wlink}
-Le terme $w(i,j) = \sum_{\ell=i}^{j} p_\ell$ peut être précalculé de façon
-incrémentale : $w(i,j) = w(i,j-1) + p_j$, ce qui évite de le recalculer à chaque
-étape.
+\begin{remark}{Link with the Sum of Probabilities}{wlink}
+The term $w(i,j) = \sum_{\ell=i}^{j} p_\ell$ can be precalculated 
+incrementally: $w(i,j) = w(i,j-1) + p_j$, which avoids recalculating it at each
+step.
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Algorithme bottom-up}
+\subsection{Bottom-up Algorithm}
 
-On remplit les tables $e$ et $r$ (racines optimales) par longueur de chaîne
-croissante ($\ell = j - i + 1$ de 1 à $n$) :
+We fill tables $e$ and $r$ (optimal roots) by increasing chain length 
+($\ell = j - i + 1$ from 1 to $n$):
 
 \begin{algorithm}[H]
 \caption{Optimal-BST($p$, $n$)}
 \begin{algorithmic}[1]
-\State Créer les tables $e[1\ldots n+1,\; 0\ldots n]$,
-       $w[1\ldots n+1,\; 0\ldots n]$ et $r[1\ldots n,\; 1\ldots n]$
+\State Create tables $e[1\ldots n+1,\; 0\ldots n]$,
+       $w[1\ldots n+1,\; 0\ldots n]$ and $r[1\ldots n,\; 1\ldots n]$
 \For{$i = 1$ \textbf{to} $n+1$}
-    \State $e[i, i-1] \leftarrow 0$     \AlgComment{sous-arbres vides}
+    \State $e[i, i-1] \leftarrow 0$     \AlgComment{empty subtrees}
     \State $w[i, i-1] \leftarrow 0$
 \EndFor
-\For{$\ell = 1$ \textbf{to} $n$}        \AlgComment{longueur de la chaîne}
+\For{$\ell = 1$ \textbf{to} $n$}        \AlgComment{chain length}
     \For{$i = 1$ \textbf{to} $n - \ell + 1$}
         \State $j \leftarrow i + \ell - 1$
         \State $e[i,j] \leftarrow \infty$
         \State $w[i,j] \leftarrow w[i, j-1] + p_j$
-        \For{$r = i$ \textbf{to} $j$}   \AlgComment{essayer chaque racine}
+        \For{$r = i$ \textbf{to} $j$}   \AlgComment{try each root}
             \State $t \leftarrow e[i, r-1] + e[r+1, j] + w[i,j]$
             \If{$t < e[i,j]$}
                 \State $e[i,j] \leftarrow t$
-                \State $\mathit{root}[i,j] \leftarrow r$  \AlgComment{mémoriser la racine optimale}
+                \State $\mathit{root}[i,j] \leftarrow r$  \AlgComment{store optimal root}
             \EndIf
         \EndFor
     \EndFor
 \EndFor
-\State \Return $e$ et $\mathit{root}$
+\State \Return $e$ and $\mathit{root}$
 \end{algorithmic}
 \end{algorithm}
 
 \begin{complexity}{Optimal-BST}{obstcplx}
 \begin{itemize}[noitemsep]
-  \item La table $e$ contient $O(n^2)$ entrées.
-  \item Chaque entrée $e[i,j]$ requiert $O(n)$ pour tester toutes les racines $r$.
-  \item \textbf{Complexité totale : $\Theta(n^3)$ en temps, $\Theta(n^2)$ en espace.}
+  \item Table $e$ contains $O(n^2)$ entries.
+  \item Each entry $e[i,j]$ requires $O(n)$ to test all roots $r$.
+  \item \textbf{Total complexity: $\Theta(n^3)$ in time, $\Theta(n^2)$ in space.}
 \end{itemize}
 \end{complexity}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Exemple numérique complet}
+\subsection{Complete Numerical Example}
 
-Avec $p = (0.25,\, 0.2,\, 0.05,\, 0.2,\, 0.3)$, la table $e[i,j]$ remplie
-ligne par ligne (indices $j$ en colonnes, $i$ en lignes) :
+With $p = (0.25,\, 0.2,\, 0.05,\, 0.2,\, 0.3)$, the table $e[i,j]$ filled
+row by row (indices $j$ in columns, $i$ in rows):
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -255,46 +254,46 @@ $i=6$ &   &      &      &      &      & 0    \\
 \end{tabular}
 \end{center}
 
-L'OBST a un coût de recherche espéré de $e[1,5] = \mathbf{2.10}$.
+The OBST has an expected search cost of $e[1,5] = \mathbf{2.10}$.
 
-\textbf{Calcul de $e[1,2]$ pour illustration :}
-$w(1,2) = p_1 + p_2 = 0.45$. On teste :
+\textbf{Calculation of $e[1,2]$ for illustration:}
+$w(1,2) = p_1 + p_2 = 0.45$. We test:
 \begin{itemize}[noitemsep]
-  \item $r = 1$ : $e[1,0] + e[2,2] + 0.45 = 0 + 0.20 + 0.45 = 0.65$
-  \item $r = 2$ : $e[1,1] + e[3,2] + 0.45 = 0.25 + 0 + 0.45 = 0.70$
+  \item $r = 1$: $e[1,0] + e[2,2] + 0.45 = 0 + 0.20 + 0.45 = 0.65$
+  \item $r = 2$: $e[1,1] + e[3,2] + 0.45 = 0.25 + 0 + 0.45 = 0.70$
 \end{itemize}
-Minimum : $e[1,2] = 0.65$ avec $r = 1$ (racine $k_1$).
+Minimum: $e[1,2] = 0.65$ with $r = 1$ (root $k_1$).
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Reconstruction de l'arbre optimal}
+\subsection{Reconstructing the Optimal Tree}
 
-La table $\mathit{root}[i,j]$ mémorise la racine choisie à chaque étape. On
-reconstruit l'arbre récursivement :
+Table $\mathit{root}[i,j]$ stores the chosen root at each step. We
+reconstruct the tree recursively:
 
 \begin{algorithm}[H]
 \caption{Build-Optimal-BST($\mathit{root}$, $i$, $j$, $\mathit{parent}$)}
 \begin{algorithmic}[1]
 \If{$i > j$}
-    \State \Return \AlgComment{sous-arbre vide}
+    \State \Return \AlgComment{empty subtree}
 \EndIf
 \State $r \leftarrow \mathit{root}[i,j]$
-\State \textbf{afficher} ``$k_r$ est \{racine / fils gauche / fils droit\} de $\mathit{parent}$''
-\State \Call{Build-Optimal-BST}{$\mathit{root}$, $i$, $r-1$, $k_r$}   \AlgComment{sous-arbre gauche}
-\State \Call{Build-Optimal-BST}{$\mathit{root}$, $r+1$, $j$, $k_r$}   \AlgComment{sous-arbre droit}
+\State \textbf{print} ``$k_r$ is \{root / left child / right child\} of $\mathit{parent}$''
+\State \Call{Build-Optimal-BST}{$\mathit{root}$, $i$, $r-1$, $k_r$}   \AlgComment{left subtree}
+\State \Call{Build-Optimal-BST}{$\mathit{root}$, $r+1$, $j$, $k_r$}   \AlgComment{right subtree}
 \end{algorithmic}
 \end{algorithm}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résumé : OBST}
+\subsection{Summary: OBST}
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Récapitulatif DP – Arbre Binaire de Recherche Optimal}]
+                  title={Summary DP – Optimal Binary Search Tree}]
 \begin{itemize}[noitemsep]
-  \item \textbf{Choix} : quelle clé $k_r$ placer à la racine du sous-arbre
+  \item \textbf{Choice}: which key $k_r$ to place at the root of the subtree
         $k_i, \ldots, k_j$.
-  \item \textbf{Sous-structure optimale} : les sous-arbres gauche et droit
-        doivent eux-mêmes être des OBST.
-  \item \textbf{Récurrence} :
+  \item \textbf{Optimal substructure}: the left and right subtrees must
+        themselves be OBSTs.
+  \item \textbf{Recurrence}:
     \[
       e[i,j] =
       \begin{cases}
@@ -303,25 +302,25 @@ reconstruit l'arbre récursivement :
           \bigl\{e[i,r-1] + e[r+1,j] + w(i,j)\bigr\} & i \le j.
       \end{cases}
     \]
-  \item \textbf{Complexité} : $\Theta(n^3)$ en temps, $\Theta(n^2)$ en espace.
-  \item \textbf{Reconstruction} : table $\mathit{root}[i,j]$ + appels récursifs.
+  \item \textbf{Complexity}: $\Theta(n^3)$ in time, $\Theta(n^2)$ in space.
+  \item \textbf{Reconstruction}: table $\mathit{root}[i,j]$ + recursive calls.
 \end{itemize}
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Tableau récapitulatif général de la DP}
+\subsection{General Summary Table for DP}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.45}
 \begin{tabular}{llcc}
 \toprule
-\textbf{Problème} & \textbf{Choix} & \textbf{Complexité} & \textbf{Table} \\
+\textbf{Problem} & \textbf{Choice} & \textbf{Complexity} & \textbf{Table} \\
 \midrule
-Coupe de tiges      & Position de la coupe gauche        & $\Theta(n^2)$  & $n+1$ \\
-Rendu de monnaie    & Dénomination utilisée              & $O(nW)$        & $W+1$ \\
-Chaînes de matrices & Position de la parenthèse          & $\Theta(n^3)$  & $n^2$ \\
-LCS                 & Inclure $x_i = y_j$ / avancer      & $\Theta(mn)$   & $(m+1)(n+1)$ \\
-OBST                & Racine du sous-arbre $k_i\ldots k_j$ & $\Theta(n^3)$& $n^2$ \\
+Rod Cutting         & Left cut position                & $\Theta(n^2)$  & $n+1$ \\
+Coin Change         & Denomination used                & $O(nW)$        & $W+1$ \\
+Matrix Chains       & Parenthesis position             & $\Theta(n^3)$  & $n^2$ \\
+LCS                 & Include $x_i = y_j$ / advance    & $\Theta(mn)$   & $(m+1)(n+1)$ \\
+OBST                & Root of subtree $k_i\ldots k_j$  & $\Theta(n^3)$  & $n^2$ \\
 \bottomrule
 \end{tabular}
 \end{center}

@@ -1,47 +1,47 @@
-\subsection{Multiplication de matrices}
+\subsection{Matrix Multiplication}
 
-\textbf{Problème :} étant données deux matrices $n \times n$ $A$ et $B$, calculer
-$C = A \cdot B$ où $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
+\textbf{Problem:} given two $n \times n$ matrices $A$ and $B$, compute
+$C = A \cdot B$ where $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{lcll}
 \toprule
-\textbf{Algorithme} & \textbf{Récurrence} & \textbf{Complexité} & \textbf{Remarque} \\
+\textbf{Algorithm} & \textbf{Recurrence} & \textbf{Complexity} & \textbf{Remark} \\
 \midrule
-Naïf (3 boucles imbriquées)
-  & --- & $\Theta(n^3)$ & Référence \\
-D\&C simple (8 sous-problèmes)
+Naive (3 nested loops)
+  & --- & $\Theta(n^3)$ & Reference \\
+Simple D\&C (8 subproblems)
   & $T(n) = 8T(n/2) + \Theta(n^2)$
-  & $\Theta(n^3)$ & Pas d'amélioration \\
+  & $\Theta(n^3)$ & No improvement \\
 \textbf{Strassen}
   & $T(n) = 7T(n/2) + \Theta(n^2)$
-  & $\Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})$ & Mieux ! \\
+  & $\Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})$ & Better! \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-L'idée de Strassen : utiliser des combinaisons algébriques astucieuses pour n'effectuer
-que \textbf{7 multiplications} de sous-matrices au lieu de 8, au prix de quelques additions
-supplémentaires (moins coûteuses).
+Strassen's idea: use clever algebraic combinations to perform only
+\textbf{7 multiplications} of submatrices instead of 8, at the cost of a few
+additional (less expensive) additions.
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Application du Master Theorem à Strassen}]
+                  title={Applying the Master Theorem to Strassen}]
 $a=7$, $b=2$, $f(n)=\Theta(n^2)$, $n^{\log_2 7} \approx n^{2.81}$.\\
-Comme $f(n) = O(n^{\log_2 7 - \varepsilon})$ (cas~1) :
+Since $f(n) = O(n^{\log_2 7 - \varepsilon})$ (case 1):
 $T(n) = \Theta(n^{\log_2 7}) \approx \Theta(n^{2.81})$.
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Tas (\textit{Heaps}) et Heapsort}
+\subsection{Heaps and Heapsort}
 
-Le Heapsort combine les avantages du tri fusion ($O(n\log n)$) et du tri par insertion
-(tri \emph{en place}).
+Heapsort combines the advantages of merge sort ($O(n\log n)$) and insertion sort
+(\emph{in-place} sorting).
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsubsection{Structure d'un tas binaire}
+\subsubsection{Binary Heap Structure}
 
-Un \textbf{tas (max-heap)} est un arbre binaire \emph{presque complet} stocké dans un tableau.
+A \textbf{max-heap} is a \emph{nearly complete} binary tree stored in an array.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -50,7 +50,7 @@ Un \textbf{tas (max-heap)} est un arbre binaire \emph{presque complet} stocké d
     level 2/.style={sibling distance=1.8cm},
     level 3/.style={sibling distance=1cm},
     every node/.style={circle, draw, fill=blue!10,
-                       inner sep=1pt, minimum size=0.7cm, font=\small}
+                        inner sep=1pt, minimum size=0.7cm, font=\small}
 ]
 \node {16}
   child { node {14}
@@ -81,27 +81,27 @@ Un \textbf{tas (max-heap)} est un arbre binaire \emph{presque complet} stocké d
 \end{tikzpicture}
 \end{center}
 
-Pour un nœud à l'indice $i$ :
+For a node at index $i$:
 \[
   \textsc{Parent}(i) = \lfloor i/2 \rfloor, \quad
   \textsc{Left}(i) = 2i, \quad
   \textsc{Right}(i) = 2i+1.
 \]
 
-\textbf{Propriété max-heap :} $A[\textsc{Parent}(i)] \ge A[i]$ pour tout $i \ne$ racine.
-Le maximum est toujours à la racine $A[1]$.
+\textbf{Max-heap property:} $A[\textsc{Parent}(i)] \ge A[i]$ for all $i \ne$ root.
+The maximum is always at the root $A[1]$.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsubsection{Opérations clés}
+\subsubsection{Key Operations}
 
 \paragraph{\textsc{Max-Heapify}$(A, i)$.}
-Restaure la propriété max-heap pour le sous-arbre enraciné en $i$, en supposant que
-les sous-arbres gauche et droit sont déjà des max-heaps. L'élément « coule » vers le bas.
-Complexité : $O(\log n)$ (hauteur du tas).
+Restores the max-heap property for the subtree rooted at $i$, assuming that
+the left and right subtrees are already max-heaps. The element "drifts" downward.
+Complexity: $O(\log n)$ (heap height).
 
 \paragraph{\textsc{Build-Max-Heap}$(A)$.}
-Construit un max-heap à partir d'un tableau quelconque en appelant
-\textsc{Max-Heapify} sur tous les nœuds non-feuilles (de $\lfloor n/2 \rfloor$ jusqu'à 1).
+Builds a max-heap from an arbitrary array by calling
+\textsc{Max-Heapify} on all non-leaf nodes (from $\lfloor n/2 \rfloor$ down to 1).
 
 \begin{algorithm}[H]
 \caption{Build-Max-Heap($A$)}
@@ -114,8 +114,8 @@ Construit un max-heap à partir d'un tableau quelconque en appelant
 \end{algorithm}
 
 \begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
-                  title={Complexité de Build-Max-Heap}]
-Bien que l'on appelle $O(n)$ fois une fonction en $O(\log n)$, l'analyse fine
-(la majorité des nœuds ont une faible hauteur) donne :
+                  title={Complexity of Build-Max-Heap}]
+Although we call a $O(\log n)$ function $O(n)$ times, a careful analysis
+(the majority of nodes have a low height) yields:
 \[ \boxed{T_{\text{build}} = \Theta(n)} \]
 \end{tcolorbox}

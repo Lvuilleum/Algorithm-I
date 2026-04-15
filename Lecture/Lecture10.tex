@@ -1,60 +1,60 @@
 % ══════════════════════════════════════════════════════════════════════════════
-% Lecture 10 : Programmation Dynamique – Plus Longue Sous-Séquence Commune (LCS)
+% Lecture 10: Dynamic Programming – Longest Common Subsequence (LCS)
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ══════════════════════════════════════════════════════════════════════════════
-\section*{Plus Longue Sous-Séquence Commune (LCS)}
-\addcontentsline{toc}{subsection}{Plus Longue Sous-Séquence Commune (LCS)}
+\section*{Longest Common Subsequence (LCS)}
+\addcontentsline{toc}{subsection}{Longest Common Subsequence (LCS)}
 % ══════════════════════════════════════════════════════════════════════════════
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Définition et motivation}
+\subsection{Definition and Motivation}
 
-\begin{definition}{Plus Longue Sous-Séquence Commune}{lcs}
-\textbf{Entrée :} deux séquences $X = \langle x_1, \ldots, x_m \rangle$ et
+\begin{definition}{Longest Common Subsequence}{lcs}
+\textbf{Input:} two sequences $X = \langle x_1, \ldots, x_m \rangle$ and
 $Y = \langle y_1, \ldots, y_n \rangle$.
 
-\textbf{Sortie :} une sous-séquence commune aux deux dont la longueur est maximale.
+\textbf{Output:} a common subsequence to both whose length is maximal.
 
-\textbf{Rappel :} une sous-séquence n'a pas besoin d'être consécutive, mais doit
-respecter l'ordre des éléments.
+\textbf{Reminder:} a subsequence does not need to be consecutive, but must
+respect the order of the elements.
 \end{definition}
 
-\textbf{Exemple :} sur les mots \texttt{heroically} et \texttt{scholarly}, la LCS
-est \texttt{holly} (longueur~5) : les lettres apparaissent dans le bon ordre dans
-chacun des deux mots, sans forcément être adjacentes.
+\textbf{Example:} for the words \texttt{heroically} and \texttt{scholarly}, the LCS
+is \texttt{holly} (length~5): the letters appear in the correct order in
+each of the two words, without necessarily being adjacent.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Pourquoi les approches naïves échouent}
+\subsection{Why Naive Approaches Fail}
 
-\textbf{Force brute :} pour chaque sous-séquence de $X$, vérifier si elle est
-une sous-séquence de $Y$.
+\textbf{Brute force:} for each subsequence of $X$, check if it is
+a subsequence of $Y$.
 
-\begin{complexity}{Force brute pour LCS}{lcsbf}
+\begin{complexity}{Brute force for LCS}{lcsbf}
 \begin{itemize}[noitemsep]
-  \item $X$ possède $2^m$ sous-séquences.
-  \item Chaque vérification prend $\Theta(n)$ (parcourir $Y$ lettre par lettre).
-  \item \textbf{Complexité totale : $\Theta(n \cdot 2^m)$ — exponentielle, inutilisable.}
+  \item $X$ has $2^m$ subsequences.
+  \item Each verification takes $\Theta(n)$ (traversing $Y$ letter by letter).
+  \item \textbf{Total complexity: $\Theta(n \cdot 2^m)$ — exponential, unusable.}
 \end{itemize}
 \end{complexity}
 
-Il n'existe pas non plus d'algorithme glouton naturel pour ce problème :
-la lettre localement la meilleure ne mène pas nécessairement à la solution globale
-optimale. La programmation dynamique est le bon outil.
+There is also no natural greedy algorithm for this problem:
+the locally best letter does not necessarily lead to the global optimal
+solution. Dynamic programming is the right tool.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Intuition de l'approche DP}
+\subsection{Intuition of the DP Approach}
 
-On parcourt les deux séquences depuis la \emph{droite} (la fin) vers la gauche,
-étape par étape.
+We traverse the two sequences from the \emph{right} (the end) to the left,
+step by step.
 
-À chaque position $(i, j)$ (on regarde $x_i$ et $y_j$) :
+At each position $(i, j)$ (looking at $x_i$ and $y_j$):
 \begin{itemize}
-  \item \textbf{Si $x_i = y_j$} : cette lettre fait partie de la LCS ; on l'inclut
-        et on résout le sous-problème sur les préfixes $X_{i-1}$ et $Y_{j-1}$.
-  \item \textbf{Si $x_i \ne y_j$} : la LCS optimale s'obtient en avançant d'un pas
-        à gauche dans \emph{l'une} des deux séquences, et on prend le meilleur des
-        deux résultats.
+  \item \textbf{If $x_i = y_j$}: this letter is part of the LCS; we include it
+        and solve the subproblem on prefixes $X_{i-1}$ and $Y_{j-1}$.
+  \item \textbf{If $x_i \ne y_j$}: the optimal LCS is obtained by moving one step
+        to the left in \emph{one} of the two sequences, and taking the best of the
+        two results.
 \end{itemize}
 
 \begin{center}
@@ -80,81 +80,81 @@ On parcourt les deux séquences depuis la \emph{droite} (la fin) vers la gauche,
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Sous-structure optimale}
+\subsection{Optimal Substructure}
 
-Notons $X_i = \langle x_1, x_2, \ldots, x_i \rangle$ et
-$Y_j = \langle y_1, y_2, \ldots, y_j \rangle$ les préfixes de longueur $i$ et $j$.
+Let $X_i = \langle x_1, x_2, \ldots, x_i \rangle$ and
+$Y_j = \langle y_1, y_2, \ldots, y_j \rangle$ be the prefixes of length $i$ and $j$.
 
-\begin{theorem}{Sous-structure optimale pour LCS}{lcsopt}
-Soit $Z = \langle z_1, z_2, \ldots, z_k \rangle$ une LCS de $X_i$ et $Y_j$.
+\begin{theorem}{Optimal Substructure for LCS}{lcsopt}
+Let $Z = \langle z_1, z_2, \ldots, z_k \rangle$ be an LCS of $X_i$ and $Y_j$.
 \begin{enumerate}
-  \item \textbf{Si $x_i = y_j$} : alors $z_k = x_i = y_j$ et $Z_{k-1}$ est une
-        LCS de $X_{i-1}$ et $Y_{j-1}$.
-  \item \textbf{Si $x_i \ne y_j$ et $z_k \ne x_i$} : alors $Z$ est une LCS de
-        $X_{i-1}$ et $Y_j$.
-  \item \textbf{Si $x_i \ne y_j$ et $z_k \ne y_j$} : alors $Z$ est une LCS de
-        $X_i$ et $Y_{j-1}$.
+  \item \textbf{If $x_i = y_j$}: then $z_k = x_i = y_j$ and $Z_{k-1}$ is an
+        LCS of $X_{i-1}$ and $Y_{j-1}$.
+  \item \textbf{If $x_i \ne y_j$ and $z_k \ne x_i$}: then $Z$ is an LCS of
+        $X_{i-1}$ and $Y_j$.
+  \item \textbf{If $x_i \ne y_j$ and $z_k \ne y_j$}: then $Z$ is an LCS of
+        $X_i$ and $Y_{j-1}$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-\textbf{Cas 1 ($x_i = y_j$).}
-Si $z_k \ne x_i = y_j$, alors $Z' = \langle z_1, \ldots, z_k, x_i \rangle$ est une
-sous-séquence commune de $X_i$ et $Y_j$ de longueur $k+1$, ce qui contredit
-l'optimalité de $Z$. Donc $z_k = x_i = y_j$.
+\textbf{Case 1 ($x_i = y_j$).}
+If $z_k \ne x_i = y_j$, then $Z' = \langle z_1, \ldots, z_k, x_i \rangle$ is a
+common subsequence of $X_i$ and $Y_j$ of length $k+1$, which contradicts
+the optimality of $Z$. Thus $z_k = x_i = y_j$.
 
-Supposons maintenant que $Z_{k-1}$ n'est pas une LCS de $X_{i-1}$ et $Y_{j-1}$ :
-il existerait une sous-séquence commune $W$ de $X_{i-1}$ et $Y_{j-1}$ de
-longueur $\ge k$. Alors $\langle W, z_k \rangle$ serait une sous-séquence commune
-de $X_i$ et $Y_j$ de longueur $\ge k+1$, contradiction.
+Now suppose that $Z_{k-1}$ is not an LCS of $X_{i-1}$ and $Y_{j-1}$:
+there would exist a common subsequence $W$ of $X_{i-1}$ and $Y_{j-1}$ of
+length $\ge k$. Then $\langle W, z_k \rangle$ would be a common subsequence
+of $X_i$ and $Y_j$ of length $\ge k+1$, a contradiction.
 
-\textbf{Cas 2 ($x_i \ne y_j$, $z_k \ne x_i$).}
-$Z$ est déjà une sous-séquence commune de $X_{i-1}$ et $Y_j$. Si elle n'était pas
-optimale, il existerait $W$ de longueur $> k$ sous-séquence de $X_{i-1}$ et $Y_j$,
-qui serait aussi une sous-séquence de $X_i$ et $Y_j$ (car $W$ ne finit pas par $x_i$),
-contradisant l'optimalité de $Z$. Le cas~3 est symétrique.
+\textbf{Case 2 ($x_i \ne y_j$, $z_k \ne x_i$).}
+$Z$ is already a common subsequence of $X_{i-1}$ and $Y_j$. If it were not
+optimal, there would exist $W$ of length $> k$ as a subsequence of $X_{i-1}$ and $Y_j$,
+which would also be a subsequence of $X_i$ and $Y_j$ (since $W$ does not end with $x_i$),
+contradicting the optimality of $Z$. Case~3 is symmetric.
 \end{proof}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Formulation récursive}
+\subsection{Recursive Formulation}
 
-On déduit du théorème précédent que la longueur de la LCS de $X_i$ et $Y_j$ vaut :
+It follows from the previous theorem that the length of the LCS of $X_i$ and $Y_j$ is:
 
 \[
-  c[i, j] = \text{longueur de la LCS de } X_i \text{ et } Y_j
+  c[i, j] = \text{length of the LCS of } X_i \text{ and } Y_j
 \]
 
-avec la récurrence :
+with the recurrence:
 
 \[
   c[i, j] =
   \begin{cases}
-    0 & \text{si } i = 0 \text{ ou } j = 0, \\
-    c[i-1, j-1] + 1 & \text{si } i, j > 0 \text{ et } x_i = y_j, \\
-    \max\bigl(c[i-1, j],\; c[i, j-1]\bigr) & \text{si } i, j > 0 \text{ et } x_i \ne y_j.
+    0 & \text{if } i = 0 \text{ or } j = 0, \\
+    c[i-1, j-1] + 1 & \text{if } i, j > 0 \text{ and } x_i = y_j, \\
+    \max\bigl(c[i-1, j],\; c[i, j-1]\bigr) & \text{if } i, j > 0 \text{ and } x_i \ne y_j.
   \end{cases}
 \]
 
-On veut calculer $c[m, n]$.
+We want to compute $c[m, n]$.
 
-\begin{remark}{Sous-problèmes répétés}{lcsov}
-Une récursion naïve résoudrait les mêmes sous-problèmes un nombre exponentiel de fois.
-L'approche bottom-up remplit la table $c$ une seule fois, en traitant les
-sous-problèmes par taille croissante (lignes $i$ de $0$ à $m$, colonnes $j$ de $0$ à $n$).
+\begin{remark}{Overlapping Subproblems}{lcsov}
+A naive recursion would solve the same subproblems an exponential number of times.
+The bottom-up approach fills the table $c$ only once, by processing the
+subproblems by increasing size (rows $i$ from $0$ to $m$, columns $j$ from $0$ to $n$).
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Algorithme bottom-up et exemple complet}
+\subsection{Bottom-up Algorithm and Complete Example}
 
-Pour $X = \langle B,A,B,D,B,A \rangle$ et $Y = \langle D,A,C,B,C,B,A \rangle$
-($m = 6$, $n = 7$), voici la table $c[i,j]$ complète :
+For $X = \langle B,A,B,D,B,A \rangle$ and $Y = \langle D,A,C,B,C,B,A \rangle$
+($m = 6$, $n = 7$), here is the complete table $c[i,j]$:
 
 \begin{center}
 \renewcommand{\arraystretch}{1.4}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 & & \multicolumn{7}{c}{$j$} \\
 $i$ & & \textbf{0} & \textbf{1 (D)} & \textbf{2 (A)} & \textbf{3 (C)} &
-         \textbf{4 (B)} & \textbf{5 (C)} & \textbf{6 (B)} & \textbf{7 (A)} \\
+          \textbf{4 (B)} & \textbf{5 (C)} & \textbf{6 (B)} & \textbf{7 (A)} \\
 \hline
 \textbf{0}      & & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 \textbf{1 (B)}  & & 0 & 0 & 0 & 0 & 1 & 1 & 1 & 1 \\
@@ -166,13 +166,13 @@ $i$ & & \textbf{0} & \textbf{1 (D)} & \textbf{2 (A)} & \textbf{3 (C)} &
 \end{tabular}
 \end{center}
 
-La LCS a longueur \textbf{4} (valeur $c[6,7]$). En remontant les décisions, on
-obtient la LCS \textbf{ABBA}.
+The LCS has length \textbf{4} (value $c[6,7]$). By tracing back the decisions, we
+obtain the LCS \textbf{ABBA}.
 
-\begin{remark}{Lecture de la table}{lcstable}
-Pour remplir $c[i,j]$ : si $x_i = y_j$, venir de la diagonale ($c[i-1,j-1]+1$).
-Sinon, prendre le maximum de la cellule du dessus ($c[i-1,j]$) et de la cellule
-de gauche ($c[i,j-1]$).
+\begin{remark}{Reading the Table}{lcstable}
+To fill $c[i,j]$: if $x_i = y_j$, come from the diagonal ($c[i-1,j-1]+1$).
+Otherwise, take the maximum of the cell above ($c[i-1,j]$) and the cell
+to the left ($c[i,j-1]$).
 \end{remark}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ de gauche ($c[i,j-1]$).
 \caption{LCS-Length($X$, $Y$)}
 \begin{algorithmic}[1]
 \State $m \leftarrow X.\mathit{length}$;\; $n \leftarrow Y.\mathit{length}$
-\State Créer les tables $c[0\ldots m,\; 0\ldots n]$ et $b[1\ldots m,\; 1\ldots n]$
+\State Create tables $c[0\ldots m,\; 0\ldots n]$ and $b[1\ldots m,\; 1\ldots n]$
 \For{$i = 0$ \textbf{to} $m$}
     \State $c[i, 0] \leftarrow 0$
 \EndFor
@@ -193,33 +193,33 @@ de gauche ($c[i,j-1]$).
     \For{$j = 1$ \textbf{to} $n$}
         \If{$x_i = y_j$}
             \State $c[i, j] \leftarrow c[i-1, j-1] + 1$
-            \State $b[i, j] \leftarrow \text{``}\nwarrow\text{''}$   \AlgComment{diagonale : lettre en commun}
+            \State $b[i, j] \leftarrow \text{``}\nwarrow\text{''}$   \AlgComment{diagonal: common letter}
         \ElsIf{$c[i-1, j] \ge c[i, j-1]$}
             \State $c[i, j] \leftarrow c[i-1, j]$
-            \State $b[i, j] \leftarrow \text{``}\uparrow\text{''}$   \AlgComment{haut : avancer dans $X$}
+            \State $b[i, j] \leftarrow \text{``}\uparrow\text{''}$   \AlgComment{up: advance in $X$}
         \Else
             \State $c[i, j] \leftarrow c[i, j-1]$
-            \State $b[i, j] \leftarrow \text{``}\leftarrow\text{''}$ \AlgComment{gauche : avancer dans $Y$}
+            \State $b[i, j] \leftarrow \text{``}\leftarrow\text{''}$ \AlgComment{left: advance in $Y$}
         \EndIf
     \EndFor
 \EndFor
-\State \Return $c$ et $b$
+\State \Return $c$ and $b$
 \end{algorithmic}
 \end{algorithm}
 
 \begin{complexity}{LCS-Length}{lcscplx}
 \begin{itemize}[noitemsep]
-  \item La table $c$ contient $(m+1)(n+1)$ entrées, chacune calculée en $\Theta(1)$.
-  \item \textbf{Complexité en temps : $\Theta(m \cdot n)$.}
-  \item \textbf{Complexité en espace : $\Theta(m \cdot n)$.}
+  \item Table $c$ contains $(m+1)(n+1)$ entries, each calculated in $\Theta(1)$.
+  \item \textbf{Time complexity: $\Theta(m \cdot n)$.}
+  \item \textbf{Space complexity: $\Theta(m \cdot n)$.}
 \end{itemize}
 \end{complexity}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Reconstruction de la LCS}
+\subsection{LCS Reconstruction}
 
-La table $b$ mémorise les choix optimaux : on la remonte récursivement depuis
-$b[m, n]$ vers le coin supérieur gauche.
+Table $b$ stores the optimal choices: we trace it back recursively from
+$b[m, n]$ toward the upper-left corner.
 
 \begin{algorithm}[H]
 \caption{Print-LCS($b$, $X$, $i$, $j$)}
@@ -229,7 +229,7 @@ $b[m, n]$ vers le coin supérieur gauche.
 \EndIf
 \If{$b[i, j] = \text{``}\nwarrow\text{''}$}
     \State \Call{Print-LCS}{$b$, $X$, $i-1$, $j-1$}
-    \State \textbf{afficher} $x_i$         \AlgComment{lettre commune : on l'inclut}
+    \State \textbf{print} $x_i$         \AlgComment{common letter: we include it}
 \ElsIf{$b[i, j] = \text{``}\uparrow\text{''}$}
     \State \Call{Print-LCS}{$b$, $X$, $i-1$, $j$}
 \Else
@@ -240,19 +240,19 @@ $b[m, n]$ vers le coin supérieur gauche.
 
 \begin{complexity}{Print-LCS}{printlcscplx}
 \begin{itemize}[noitemsep]
-  \item Chaque appel récursif diminue $i + j$ d'au moins 1.
-  \item La récurrence satisfait $T(n) \le T(n-1) + \Theta(1)$, d'où $T(n) = O(n)$.
-  \item \textbf{Complexité totale : $\Theta(|X| + |Y|)$}
-        (la borne inférieure vient de $T(n) \ge T(n-2) + \Theta(1)$).
+  \item Each recursive call decreases $i + j$ by at least 1.
+  \item The recurrence satisfies $T(n) \le T(n-1) + \Theta(1)$, hence $T(n) = O(n)$.
+  \item \textbf{Total complexity: $\Theta(|X| + |Y|)$}
+        (the lower bound comes from $T(n) \ge T(n-2) + \Theta(1)$).
 \end{itemize}
 \end{complexity}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Illustration du tracé arrière}
+\subsection{Backtracking Illustration}
 
-Pour $X = \langle B,A,B,D,B,A \rangle$, $Y = \langle D,A,C,B,C,B,A \rangle$,
-le chemin dans la table $b$ (illustré ci-dessous) identifie les lettres \textbf{A, B, B, A}
-= \textbf{ABBA} comme LCS :
+For $X = \langle B,A,B,D,B,A \rangle$, $Y = \langle D,A,C,B,C,B,A \rangle$,
+the path in table $b$ (illustrated below) identifies the letters \textbf{A, B, B, A}
+= \textbf{ABBA} as the LCS:
 
 \begin{center}
 \begin{tikzpicture}[font=\small, >=Stealth,
@@ -322,44 +322,44 @@ le chemin dans la table $b$ (illustré ci-dessous) identifie les lettres \textbf
 
   % Legend
   \node[keyred, font=\bfseries\small] at (3.5, -0.3)
-        {LCS $=$ \textbf{ABBA} (longueur 4)};
+        {LCS $=$ \textbf{ABBA} (length 4)};
 \end{tikzpicture}
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Résumé : LCS}
+\subsection{Summary: LCS}
 
 \begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
-                  title={Récapitulatif DP – Plus Longue Sous-Séquence Commune}]
+                  title={Summary DP – Longest Common Subsequence}]
 \begin{itemize}[noitemsep]
-  \item \textbf{Choix} : si $x_i = y_j$, inclure cette lettre ; sinon avancer dans
-        $X$ ou dans $Y$ (prendre le meilleur des deux).
-  \item \textbf{Sous-structure optimale} : 3 cas selon $x_i = y_j$ ou non
-        (théorème ci-dessus).
-  \item \textbf{Récurrence} :
+  \item \textbf{Choice}: if $x_i = y_j$, include this letter; otherwise advance in
+        $X$ or in $Y$ (take the best of the two).
+  \item \textbf{Optimal substructure}: 3 cases depending on whether $x_i = y_j$ or not
+        (theorem above).
+  \item \textbf{Recurrence}:
     \[
       c[i,j] =
       \begin{cases}
-        0 & i = 0 \text{ ou } j = 0,\\
+        0 & i = 0 \text{ or } j = 0,\\
         c[i-1,j-1]+1 & x_i = y_j,\\
         \max(c[i-1,j],\,c[i,j-1]) & x_i \ne y_j.
       \end{cases}
     \]
-  \item \textbf{Complexité} : $\Theta(mn)$ en temps et en espace.
-  \item \textbf{Reconstruction} : table $b$ + \textsc{Print-LCS} en $\Theta(|X|+|Y|)$.
+  \item \textbf{Complexity}: $\Theta(mn)$ in time and space.
+  \item \textbf{Reconstruction}: table $b$ + \textsc{Print-LCS} in $\Theta(|X|+|Y|)$.
 \end{itemize}
 \end{tcolorbox}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Bilan général de la programmation dynamique}
+\subsection{General Overview of Dynamic Programming}
 
 \begin{tcolorbox}[colback=lightyellow, colframe=orange!70!black, fonttitle=\bfseries,
-                  title={Recette DP en trois étapes}]
+                  title={DP Recipe in Three Steps}]
 \begin{enumerate}
-  \item \textbf{Identifier les choix et la sous-structure optimale.}
-  \item \textbf{Écrire la valeur optimale comme récurrence sur des sous-problèmes.}
-  \item \textbf{Résoudre efficacement} : top-down avec mémoïsation ou bottom-up
-        (sans recalculer les mêmes sous-problèmes).
+  \item \textbf{Identify the choices and the optimal substructure.}
+  \item \textbf{Write the optimal value as a recurrence on subproblems.}
+  \item \textbf{Solve efficiently}: top-down with memoization or bottom-up
+        (without recalculating the same subproblems).
 \end{enumerate}
 \end{tcolorbox}
 
@@ -367,12 +367,12 @@ le chemin dans la table $b$ (illustré ci-dessous) identifie les lettres \textbf
 \renewcommand{\arraystretch}{1.45}
 \begin{tabular}{llcc}
 \toprule
-\textbf{Problème} & \textbf{Choix} & \textbf{Complexité} & \textbf{Table} \\
+\textbf{Problem} & \textbf{Choice} & \textbf{Complexity} & \textbf{Table} \\
 \midrule
-Coupe de tiges      & Position de la coupe gauche     & $\Theta(n^2)$  & $n+1$ \\
-Rendu de monnaie    & Dénomination utilisée           & $O(nW)$        & $W+1$ \\
-Chaînes de matrices & Position de la parenthèse       & $\Theta(n^3)$  & $n^2$ \\
-LCS                 & Inclure $x_i = y_j$ / avancer  & $\Theta(mn)$   & $(m+1)(n+1)$ \\
+Rod Cutting         & Left cut position               & $\Theta(n^2)$  & $n+1$ \\
+Coin Change         & Denomination used               & $O(nW)$        & $W+1$ \\
+Matrix Chains       & Parenthesis position            & $\Theta(n^3)$  & $n^2$ \\
+LCS                 & Include $x_i = y_j$ / advance   & $\Theta(mn)$   & $(m+1)(n+1)$ \\
 \bottomrule
 \end{tabular}
 \end{center}
