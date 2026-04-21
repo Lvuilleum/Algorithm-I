@@ -1,0 +1,224 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 16: Ford-Fulkerson Complexity and Applications
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Complexity of the Ford-Fulkerson Method}
+\addcontentsline{toc}{subsection}{Ford-Fulkerson Complexity}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Upper Bound (Integer Capacities)}
+
+\begin{complexity}{Ford-Fulkerson — Naive Bound}{ffnaive}
+Assuming integer capacities:
+\begin{itemize}[noitemsep]
+  \item Finding an augmenting path in $G_f$ takes $O(E)$ (using BFS or DFS).
+  \item In each iteration, the flow value increases by at least 1.
+  \item \textbf{Total Complexity: $O(E \cdot |f_{\max}|)$} where $|f_{\max}|$ is the 
+        maximum flow value.
+\end{itemize}
+\end{complexity}
+
+This bound is correct but can be very poor if the capacities are large.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problematic Case}
+
+Consider the diamond graph with a central edge of capacity 1 and 
+capacities $M = 2^{100}$ on the other edges:
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.62cm, inner sep=1pt}]
+  \node[node, fill=green!20] (s)  at (0, 1)   {$s$};
+  \node[node]                (m)  at (2, 1)   {};
+  \node[node, fill=red!20]   (t)  at (4, 1)   {$t$};
+  \draw[->, thick] (s) to[bend left=30]  node[above,font=\tiny]{$M$}   (m);
+  \draw[->, thick] (s) to[bend right=30] node[below,font=\tiny]{$M$}   (m);
+  \draw[->, thick] (m) to[bend left=30]  node[above,font=\tiny]{$M$}   (t);
+  \draw[->, thick] (m) to[bend right=30] node[below,font=\tiny]{$M$}   (t);
+  \draw[->, thick] (s) -- node[above,font=\tiny,keyred]{$1$}            (m);
+\end{tikzpicture}
+\end{center}
+
+If Ford-Fulkerson alternately chooses the top path and the bottom path 
+by passing through the central edge (capacity 1), the flow increases by 1 
+each time. It would take $2M = 2^{101}$ iterations to reach the optimum $|f_{\max}| = 2M$.
+
+\begin{remark}{Irrational Capacities}{irrational}
+If capacities are irrational, the Ford-Fulkerson method may 
+\textbf{never terminate}: the sequence of flows may converge to a 
+sub-optimal value.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Variants with Good Complexity}
+
+There are two augmenting path choices that guarantee efficient 
+termination for integer capacities:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Augmenting Path Choice} & \textbf{Number of Iterations} & \textbf{Implementation} \\
+\midrule
+\textbf{Shortest Path} (BFS) & $\le \dfrac{1}{2} \cdot |E| \cdot |V|$ & BFS \\[6pt]
+\textbf{Fattest Path} & $\le |E| \cdot \log(|E| \cdot U)$ & Modified Dijkstra \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+where $U$ is the maximum flow value.
+
+\textbf{Shortest Path (Edmonds-Karp algorithm):} we choose an augmenting 
+path with the \emph{fewest edges} possible (BFS) at each iteration. 
+The total number of iterations is bounded by $O(|V| \cdot |E|)$, which 
+gives a global complexity of $O(|V| \cdot |E|^2)$.
+
+\textbf{Fattest Path:} we choose the augmenting path whose 
+bottleneck capacity ($c_f(p) = \min_{(u,v)\in p} c_f(u,v)$) is 
+\emph{maximal}. This choice eliminates the problematic case described above.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Maximum Flow Applications}
+\addcontentsline{toc}{subsection}{Maximum Flow Applications}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Bipartite Matching}
+
+\subsubsection{Problem}
+
+$N$ students apply for $M$ job offers ($M \ge N$). Each student 
+receives several offers. Can we find a matching that assigns each student 
+to exactly one job for which they were accepted?
+
+\begin{definition}{Bipartite Graph and Matching}{bipartite}
+A \textbf{bipartite graph} $G = (L \cup R, E)$ has two disjoint 
+vertex sets $L$ (students) and $R$ (jobs); all edges go from 
+$L$ to $R$. A \textbf{matching} is a subset of edges such that each 
+vertex is incident to at most one edge of the matching.
+\end{definition}
+
+\subsubsection{Reduction to Maximum Flow}
+
+\begin{center}
+\begin{tikzpicture}[font=\small, >=Stealth,
+    node/.style={circle, draw, fill=blue!8, minimum size=0.62cm, inner sep=1pt},
+    student/.style={circle, draw, fill=blue!20, minimum size=0.62cm, inner sep=1pt},
+    job/.style={circle, draw, fill=green!20, minimum size=0.62cm, inner sep=1pt}]
+  \node[node, fill=green!30] (s) at (0, 2)   {$s$};
+  \node[student] (l1) at (2, 3.5) {$\ell_1$};
+  \node[student] (l2) at (2, 2)   {$\ell_2$};
+  \node[student] (l3) at (2, 0.5) {$\ell_3$};
+  \node[job]     (r1) at (4, 3.5) {$r_1$};
+  \node[job]     (r2) at (4, 2)   {$r_2$};
+  \node[job]     (r3) at (4, 0.5) {$r_3$};
+  \node[node, fill=red!20]   (t) at (6, 2)   {$t$};
+
+  % s -> students (capacity 1)
+  \draw[->, thick, keyblue] (s)  -- node[above,font=\tiny]{1} (l1);
+  \draw[->, thick, keyblue] (s)  -- node[above,font=\tiny]{1} (l2);
+  \draw[->, thick, keyblue] (s)  -- node[below,font=\tiny]{1} (l3);
+
+  % students -> jobs (capacity 1, preferences)
+  \draw[->, thick] (l1) -- node[above,font=\tiny]{1} (r1);
+  \draw[->, thick] (l1) -- node[above,font=\tiny]{1} (r2);
+  \draw[->, thick] (l2) -- node[above,font=\tiny]{1} (r2);
+  \draw[->, thick] (l2) -- node[below,font=\tiny]{1} (r3);
+  \draw[->, thick] (l3) -- node[below,font=\tiny]{1} (r3);
+
+  % jobs -> t (capacity 1)
+  \draw[->, thick, keyred] (r1) -- node[above,font=\tiny]{1} (t);
+  \draw[->, thick, keyred] (r2) -- node[above,font=\tiny]{1} (t);
+  \draw[->, thick, keyred] (r3) -- node[below,font=\tiny]{1} (t);
+
+  \node[below=4pt, font=\small] at (3, -0.3)
+        {All edges have capacity 1};
+\end{tikzpicture}
+\end{center}
+
+The construction is:
+\begin{itemize}[noitemsep]
+  \item Add source $s$ connected to each student (capacity 1).
+  \item Add sink $t$ connected from each job (capacity 1).
+  \item Direct student$\to$job edges (capacity 1).
+  \item Run Ford-Fulkerson.
+\end{itemize}
+
+\begin{theorem}{Max Flow = Max Matching}{bipmatch}
+The value of the maximum flow in this network is equal to the size of 
+the maximum matching in the bipartite graph.
+\end{theorem}
+
+\begin{proof}
+\textbf{Matching $\Rightarrow$ Flow.} Given a matching of size $k$, 
+we construct a flow of value $k$ by setting 1 on the matching edges and 
+on the corresponding $s$-student and job-$t$ edges.
+
+\textbf{Flow $\Rightarrow$ Matching.} Since capacities are integers, 
+Ford-Fulkerson produces an integer flow (0 or 1 on each edge). 
+Flow conservation implies: each student receives at most 1 unit of flow 
+from $s$, and each job sends at most 1 unit to $t$. The student$\to$job 
+edges with flow 1 thus form a matching of size $|f|$.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Edge-Disjoint Paths}
+
+\subsubsection{Problem}
+
+In winter, some roads may be closed. How many distinct routes 
+(sharing no edges) exist between Lausanne ($s$) and Geneva airport ($t$)? 
+What is the minimum number of roads that must be closed to block 
+all traffic from $s$ to $t$?
+
+\begin{definition}{Edge-Disjoint Paths}{edgedisj}
+Two paths are \textbf{edge-disjoint} if they share no edge. 
+The \textbf{maximum number of edge-disjoint paths} from $s$ to $t$ is the 
+largest set of pairwise edge-disjoint $s \leadsto t$ paths.
+\end{definition}
+
+\subsubsection{Reduction to Maximum Flow}
+
+We build a flow network from the road graph:
+\begin{itemize}[noitemsep]
+  \item Assign a capacity of 1 to each road (in each direction).
+  \item Remove anti-parallel edges via the dummy vertex gadget $v'$ 
+        (seen in Lecture 14).
+  \item Run Ford-Fulkerson.
+\end{itemize}
+
+\begin{tcolorbox}[colback=lightgreen, colframe=keygreen, fonttitle=\bfseries,
+                  title={Flow/Cut Duality for Edge-Disjoint Paths}]
+\[
+  \text{max-flow} = \text{maximum number of edge-disjoint paths}
+\]
+\[
+  \text{min-cut} = \text{minimum number of roads to close to isolate }s\text{ from }t
+\]
+\end{tcolorbox}
+
+The minimum cut identifies exactly the minimal set of roads whose 
+closure blocks every path from Lausanne to Geneva.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Naive Complexity:} $O(E \cdot |f_{\max}|)$ — can be exponential 
+        if capacities are large or irrational.
+  \item \textbf{Edmonds-Karp (BFS):} $\le \frac{1}{2} |E| \cdot |V|$ iterations, 
+        thus $O(|V| \cdot |E|^2)$ total.
+  \item \textbf{Fattest Path:} $\le |E| \cdot \log(|E| \cdot U)$ iterations.
+  \item \textbf{Bipartite Matching:} reduction to capacity-1 flow network; 
+        max flow $=$ max matching (integrality guaranteed by Ford-Fulkerson).
+  \item \textbf{Edge-Disjoint Paths:} capacity 1 on each edge; 
+        max flow $=$ number of edge-disjoint paths; 
+        min cut $=$ min number of edges to remove.
+\end{itemize}
+\end{tcolorbox}
