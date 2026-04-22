@@ -1,0 +1,328 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 17: Union-Find and Minimum Spanning Trees
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Disjoint-Set Data Structures (Union-Find)}
+\addcontentsline{toc}{subsection}{Union-Find Data Structure}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Introduction}
+
+\begin{definition}{Disjoint-Set Data Structure}{disjointset}
+A \textbf{disjoint-set data structure} (also known as \textbf{union-find}) maintains a collection 
+$\mathcal{S} = \{S_1, S_2, \ldots, S_k\}$ of disjoint dynamic sets. Each set is identified by 
+a \textbf{representative}, which is some member of the set. The representative doesn't matter 
+as long as querying the representative twice without modifying the set returns the same answer.
+\end{definition}
+
+The union-find data structure supports three fundamental operations:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Make-Set}$(x)$: Create a new set $S_i = \{x\}$ and add $S_i$ to $\mathcal{S}$.
+  \item \textbf{Union}$(x, y)$: If $x \in S_x$ and $y \in S_y$, replace $S_x$ and $S_y$ with 
+        $S_x \cup S_y$ in $\mathcal{S}$. The representative of the new set is any member in 
+        $S_x \cup S_y$ (often the representative of one of $S_x$ or $S_y$). This operation 
+        destroys $S_x$ and $S_y$ since sets must remain disjoint.
+  \item \textbf{Find}$(x)$: Return the representative of the set containing $x$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Application: Connected Components}
+
+A classic application of union-find is computing connected components in an undirected graph 
+$G = (V, E)$. Two vertices $u$ and $v$ are in the same connected component if and only if 
+there is a path between them. Connected components partition vertices into equivalence classes.
+
+The algorithm proceeds as follows:
+\begin{itemize}[noitemsep]
+  \item Initialize: For each vertex $v \in V$, call Make-Set$(v)$.
+  \item For each edge $(u, v) \in E$: if Find$(u) \neq$ Find$(v)$, call Union$(u, v)$.
+\end{itemize}
+
+This requires $|V|$ Make-Set operations, at most $2|E|$ Find operations, and at most $|V|-1$ 
+Union operations, for a total of at most $|V| + 3|E|$ operations.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Linked List Representation}
+
+One implementation represents each set as a singly linked list:
+\begin{itemize}[noitemsep]
+  \item Each set object maintains a pointer to the head (the representative) and the tail.
+  \item Each list element contains the set member, a pointer to the next element, and a 
+        pointer back to the set object.
+\end{itemize}
+
+\textbf{Operations:}
+\begin{itemize}[noitemsep]
+  \item Make-Set$(x)$: Create a singleton list in time $\Theta(1)$.
+  \item Find$(x)$: Follow the pointer to the set object, then to the representative in $\Theta(1)$.
+  \item Union$(x, y)$: Append $y$'s list onto the end of $x$'s list using $x$'s tail pointer. 
+        Update the set pointer for every element in $y$'s list. This can take $\Theta(n)$ time 
+        in the worst case.
+\end{itemize}
+
+\textbf{Weighted-Union Heuristic:} Always append the smaller list to the larger list (break ties arbitrarily).
+
+\begin{theorem}{Linked List with Weighted-Union}{linkedlistuf}
+With the weighted-union heuristic, a sequence of $m$ operations (Make-Set, Union, Find) on 
+$n$ elements takes $O(m + n \log n)$ time.
+\end{theorem}
+
+\begin{proof}
+Make-Set and Find still take constant time. The key observation is: how many times can each 
+element's representative pointer be updated? Each time an element's pointer is updated, it must 
+be in the smaller set being appended to a larger set. Thus the size of the set containing that 
+element at least doubles. Since the maximum set size is $n$, each element's pointer can be 
+updated at most $\log n$ times. With $n$ elements and at most $n$ unions, the total cost of 
+all pointer updates is $O(n \log n)$.
+\end{proof}
+
+For the connected components problem with $|V|$ elements and $\le |V| + 3|E|$ operations, 
+the total running time is $O(|V| \log |V| + |E|)$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Disjoint-Set Forest}
+
+A more efficient implementation represents each set as a rooted tree:
+\begin{itemize}[noitemsep]
+  \item Each node $x$ has a parent pointer $x.p$.
+  \item The root of each tree is the representative of the set.
+  \item Each node also maintains a rank $x.\text{rank}$ (an upper bound on the height).
+\end{itemize}
+
+\textbf{Operations:}
+
+\begin{algorithm}[H]
+\caption{Make-Set and Find-Set}
+\begin{algorithmic}[1]
+\Procedure{Make-Set}{$x$}
+  \State $x.p \gets x$
+  \State $x.\text{rank} \gets 0$
+\EndProcedure
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Procedure{Find-Set}{$x$}
+  \If{$x \neq x.p$}
+    \State $x.p \gets$ \Call{Find-Set}{$x.p$} \AlgComment{Path compression}
+  \EndIf
+  \State \Return $x.p$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Union by Rank}
+\begin{algorithmic}[1]
+\Procedure{Union}{$x, y$}
+\State \Call{Link}{\text{Find-Set}(x), \text{Find-Set}(y)}
+\EndProcedure
+
+\Statex % Adds a small gap between procedures
+
+\Procedure{Link}{$x, y$}
+    \If{$x.\text{rank} > y.\text{rank}$}
+        \State $y.p \gets x$
+    \Else
+        \State $x.p \gets y$
+        \If{$x.\text{rank} = y.\text{rank}$}
+            \State $y.\text{rank} \gets y.\text{rank} + 1$
+        \EndIf
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Union by rank:} Always attach the tree with smaller rank under the root of the tree 
+with larger rank.
+
+\textbf{Path compression:} During Find-Set$(x)$, make each node on the path from $x$ to the 
+root point directly to the root.
+
+\begin{complexity}{Forest with Union-by-Rank and Path Compression}{forestuf}
+If we use both union by rank and path compression, a sequence of $m$ operations (Make-Set, 
+Union, Find) on $n$ elements takes $O(m \cdot \alpha(n))$ time, where $\alpha(n)$ is the 
+\textbf{inverse Ackermann function}.
+\end{complexity}
+
+\begin{remark}{Inverse Ackermann Function}{invack}
+The function $\alpha(n)$ is an extremely slowly growing function. For all practical purposes, 
+$\alpha(n) \le 4$:
+\begin{center}
+\begin{tabular}{cc}
+\toprule
+$n$ & $\alpha(n)$ \\
+\midrule
+$0$ to $2$ & $0$ \\
+$3$ & $1$ \\
+$4$ to $7$ & $2$ \\
+$8$ to $2047$ & $3$ \\
+$2048$ to $A(4,2)$ & $4$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+where $A(4,2)$ is a number with more than $10^{19000}$ digits. Thus, for the connected 
+components problem, the running time is $O((|V| + |E|) \alpha(|V|)) \approx O(|V| + |E|)$, 
+which is essentially linear.
+\end{remark}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Minimum Spanning Trees}
+\addcontentsline{toc}{subsection}{Minimum Spanning Trees}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Definition}
+
+\begin{definition}{Minimum Spanning Tree (MST)}{mst}
+\textbf{Input:} An undirected, connected graph $G = (V, E)$ with a weight function 
+$w: E \to \mathbb{R}$ that assigns a weight $w(u,v)$ to each edge $(u,v) \in E$.
+
+\textbf{Output:} A spanning tree $T \subseteq E$ of minimum total weight 
+$w(T) = \sum_{(u,v) \in T} w(u,v)$.
+
+A \textbf{spanning tree} is an acyclic subset of edges that connects all vertices. 
+It has exactly $|V| - 1$ edges.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Applications}
+
+\textbf{Communication Networks:} A multinational company wants to lease communication lines 
+between its various locations. Each pair of locations has a cost for leasing a direct line. 
+The company wants to connect all locations with minimum total cost. The solution is the 
+minimum spanning tree of the graph where vertices are locations and edge weights are 
+leasing costs.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Generic Greedy Approach}
+
+Both Kruskal's and Prim's algorithms are based on a generic greedy strategy. The key 
+theoretical tool is the \textbf{cut property}.
+
+\begin{definition}{Cut}{cut}
+A \textbf{cut} $(S, V \setminus S)$ is a partition of the vertices into two disjoint sets 
+$S$ and $V \setminus S$. An edge $(u,v)$ \textbf{crosses} the cut if one endpoint is in $S$ 
+and the other is in $V \setminus S$.
+\end{definition}
+
+\begin{theorem}{Cut Property (Safe Edge Theorem)}{cutprop}
+Consider a cut $(S, V \setminus S)$ and let:
+\begin{itemize}[noitemsep]
+  \item $T$ be a tree on $S$ which is part of some MST
+  \item $e$ be a crossing edge of minimum weight
+\end{itemize}
+Then there exists an MST of $G$ containing both $e$ and $T$.
+\end{theorem}
+
+\begin{proof}
+If $e$ is already in the MST, we are done. Otherwise, add $e$ to the MST. This creates a 
+cycle with at least one other crossing edge $f$ (since the MST was already spanning). 
+We have $w(f) \ge w(e)$ since $e$ is a minimum weight crossing edge. Replace $f$ by $e$ 
+in the MST. The total weight doesn't increase: $w(\text{new MST}) = w(\text{old MST}) - w(f) + w(e) \le w(\text{old MST})$. 
+Thus the new tree is also an MST, and it contains both $T$ and $e$.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Prim's Algorithm}
+
+\textbf{Idea:} Start with an arbitrary vertex $v$ and set $T = \{v\}$. Greedily grow the 
+tree $T$: at each step, add to $T$ a minimum-weight crossing edge with respect to the cut 
+$(T, V \setminus T)$.
+
+\textbf{Correctness:} At each iteration, by the cut property, the minimum crossing edge is 
+safe to add. The algorithm terminates when $T$ is a spanning tree.
+
+\textbf{Implementation Challenge:} How do we find the minimum crossing edge at every iteration?
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Naive approach:} Check all outgoing edges. This requires $O(|E|)$ comparisons 
+        at each iteration, giving $O(|E| \cdot |V|)$ total time.
+  \item \textbf{Efficient approach:} For every vertex $w \notin T$, maintain $\text{dist}(w)$, 
+        the weight of the lightest edge from $w$ to any vertex in $T$. When a new vertex $u$ 
+        is added to $T$, check whether neighbors of $u$ decrease their distance to $T$. Use a 
+        min-priority queue to extract the vertex with minimum distance.
+\end{itemize}
+
+\begin{complexity}{Prim's Algorithm}{prim}
+With a binary min-heap, Prim's algorithm runs in $O(|E| \log |V|)$ time:
+\begin{itemize}[noitemsep]
+  \item $|V|$ Extract-Min operations: $O(|V| \log |V|)$
+  \item At most $|E|$ Decrease-Key operations: $O(|E| \log |V|)$
+\end{itemize}
+With a Fibonacci heap, the time improves to $O(|E| + |V| \log |V|)$.
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Kruskal's Algorithm}
+
+\textbf{Idea:} Start with an empty forest $T$. Sort all edges by weight in non-decreasing 
+order. Greedily add the cheapest edge that does not create a cycle.
+
+\begin{algorithm}[H]
+\caption{Kruskal's MST Algorithm}
+\begin{algorithmic}[1]
+\Procedure{MST-Kruskal}{$G, w$}
+  \State $A \gets \emptyset$
+  \For{each vertex $v \in V$}
+    \State \Call{Make-Set}{$v$} \AlgComment{Initialize disjoint sets}
+  \EndFor
+  \State Sort edges of $E$ by weight in non-decreasing order
+  \For{each edge $(u, v) \in E$ in sorted order}
+    \If{\Call{Find-Set}{$u$} $\neq$ \Call{Find-Set}{$v$}}
+      \State $A \gets A \cup \{(u, v)\}$ \AlgComment{Add edge to MST}
+      \State \Call{Union}{$u, v$}
+    \EndIf
+  \EndFor
+  \State \Return $A$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Correctness:} The algorithm maintains the invariant that $T$ is always a sub-forest 
+of some MST. When we add edge $(u, v)$, the endpoints are in different connected components. 
+Consider the cut $(S, V \setminus S)$ where $S$ is the component containing $u$. Since $(u, v)$ 
+is the cheapest remaining edge and it crosses this cut, by the cut property, it is safe to add.
+
+\textbf{Implementation Challenge:} We need to check whether adding edge $(u, v)$ creates a 
+cycle. This is equivalent to checking whether $u$ and $v$ are already in the same connected 
+component. This is exactly what the union-find data structure provides.
+
+\begin{complexity}{Kruskal's Algorithm}{kruskal}
+Analysis of Kruskal's algorithm:
+\begin{itemize}[noitemsep]
+  \item Initialize $A$: $O(1)$
+  \item First for loop: $|V|$ Make-Set operations
+  \item Sort edges: $O(|E| \log |E|)$
+  \item Second for loop: $O(|E|)$ Find-Set and Union operations
+  \item Total union-find operations: $O((|V| + |E|) \alpha(|V|))$
+\end{itemize}
+Total time: $O((|V| + |E|) \alpha(|V|)) + O(|E| \log |E|) = O(|E| \log |E|) = O(|E| \log |V|)$ 
+(since $|E| \le |V|^2$, we have $\log |E| = O(\log |V|)$).
+
+If edges are already sorted, the time becomes $O(|E| \alpha(|V|))$, which is almost linear.
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Union-Find Data Structure:} maintains disjoint sets with operations Make-Set, 
+        Union, and Find. Essential for tracking connected components.
+  \item \textbf{Linked list implementation:} $O(m + n \log n)$ time for $m$ operations on 
+        $n$ elements with weighted-union heuristic.
+  \item \textbf{Forest implementation:} $O(m \cdot \alpha(n))$ time with union-by-rank and 
+        path compression, where $\alpha(n)$ is the inverse Ackermann function (practically constant).
+  \item \textbf{MST Problem:} Find a spanning tree of minimum total weight in a weighted 
+        undirected graph.
+  \item \textbf{Cut Property:} The minimum weight crossing edge is safe to add to any partial MST.
+  \item \textbf{Prim's Algorithm:} Grow the tree from a single vertex by repeatedly adding 
+        the minimum crossing edge. Time: $O(|E| \log |V|)$ with binary heap.
+  \item \textbf{Kruskal's Algorithm:} Sort edges and add the cheapest edge that doesn't create 
+        a cycle using union-find. Time: $O(|E| \log |V|)$ (sorting dominates).
+  \item Both algorithms are greedy and produce correct MSTs by the cut property.
+\end{itemize}
+\end{tcolorbox}
