@@ -1,0 +1,292 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 18: Shortest Paths — Bellman-Ford and Dijkstra
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{The Shortest Path Problem}
+\addcontentsline{toc}{subsection}{Shortest Path Problem}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Definition}
+
+\begin{definition}{Shortest Path Problem}{shortestpath}
+\textbf{Input:} A directed graph $G = (V, E)$ with edge weights $w: E \to \mathbb{R}$ 
+that assigns a weight $w(u,v)$ to each edge $(u,v) \in E$.
+
+The \textbf{weight of a path} $p = \langle v_0, v_1, \ldots, v_k \rangle$ is:
+\[
+w(p) = \sum_{i=1}^{k} w(v_{i-1}, v_i)
+\]
+
+The \textbf{shortest-path weight} from $u$ to $v$ is:
+\[
+\delta(u,v) = \begin{cases}
+\min\{w(p) : u \leadsto v\} & \text{if a path from } u \text{ to } v \text{ exists} \\
+\infty & \text{otherwise}
+\end{cases}
+\]
+
+A \textbf{shortest path} from $u$ to $v$ is any path $p$ with weight $w(p) = \delta(u,v)$.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Variants}
+
+There are several variants of the shortest path problem:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Single-source:} Find shortest paths from a source vertex $s$ to every other vertex.
+  \item \textbf{Single-destination:} Find shortest paths to a given destination vertex from all vertices. 
+        Can be solved by single-source by reversing edge directions.
+  \item \textbf{Single-pair:} Find the shortest path from $u$ to $v$. No algorithm known that is 
+        better in the worst case than solving single-source.
+  \item \textbf{All-pairs:} Find shortest paths from $u$ to $v$ for all pairs of vertices. Can be 
+        solved by running single-source for each vertex, but better algorithms exist.
+\end{itemize}
+
+We will focus on the \textbf{single-source shortest path problem}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Negative Weights and Cycles}
+
+We allow negative edge weights in the graph.
+
+\begin{remark}{Negative-Weight Cycles}{negcycle}
+If there is a negative-weight cycle reachable from the source, then shortest paths are 
+not well-defined: we can traverse the cycle repeatedly to get paths of arbitrarily negative weight.
+
+Some algorithms (like Dijkstra's) only work when all edge weights are non-negative. 
+Others (like Bellman-Ford) can handle negative weights and detect negative cycles.
+\end{remark}
+
+\textbf{Application:} Currency exchange arbitrage. Model currencies as vertices and exchange 
+rates as edge weights (using logarithms to convert products to sums). A negative cycle indicates 
+an arbitrage opportunity.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Shortest Path Representation}
+
+For each vertex $v \in V$, we maintain:
+\begin{itemize}[noitemsep]
+  \item $v.d$: the current \textbf{shortest-path estimate} (upper bound on $\delta(s,v)$)
+  \item $v.\pi$: the \textbf{predecessor} of $v$ in the shortest path from $s$
+\end{itemize}
+
+Initially, $v.d = \infty$ for all $v \neq s$, and $s.d = 0$. The predecessor $v.\pi = \text{NIL}$ 
+for all vertices.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Bellman-Ford Algorithm}
+\addcontentsline{toc}{subsection}{Bellman-Ford Algorithm}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{The Relax Operation}
+
+The key operation in shortest path algorithms is \textbf{relaxation}.
+
+\begin{algorithm}[H]
+\caption{Relax Operation}
+\begin{algorithmic}[1]
+\Procedure{Relax}{$u, v, w$}
+  \If{$v.d > u.d + w(u,v)$}
+    \State $v.d \gets u.d + w(u,v)$ \AlgComment{Improve estimate}
+    \State $v.\pi \gets u$ \AlgComment{Update predecessor}
+  \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Intuition:} Can we improve the shortest path estimate for $v$ by going through $u$ 
+and taking edge $(u,v)$? If $u.d + w(u,v) < v.d$, then we have found a better path to $v$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithm Description}
+
+The Bellman-Ford algorithm works for graphs with negative weights and can detect negative cycles.
+
+\begin{algorithm}[H]
+\caption{Bellman-Ford Algorithm}
+\begin{algorithmic}[1]
+\Procedure{Bellman-Ford}{$G, w, s$}
+  \State Initialize: $s.d \gets 0$, $v.d \gets \infty$ for all $v \neq s$, $v.\pi \gets \text{NIL}$ for all $v$
+  \For{$i = 1$ to $|V| - 1$}
+    \For{each edge $(u,v) \in E$}
+      \State \Call{Relax}{$u, v, w$}
+    \EndFor
+  \EndFor
+  \For{each edge $(u,v) \in E$} \AlgComment{Check for negative cycles}
+    \If{$v.d > u.d + w(u,v)$}
+      \State \Return \textbf{false} \AlgComment{Negative cycle exists}
+    \EndIf
+  \EndFor
+  \State \Return \textbf{true}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Idea:} Iteratively relax all edges. After $i$ iterations, the algorithm has found 
+shortest paths with at most $i$ edges. Since any simple shortest path has at most $|V|-1$ edges, 
+$|V|-1$ iterations suffice.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Correctness}
+
+\begin{theorem}{Bellman-Ford Correctness}{bfcorrect}
+If the graph $G = (V, E)$ contains no negative-weight cycles reachable from the source $s$, 
+then after $|V|-1$ iterations of relaxing all edges, we have $v.d = \delta(s,v)$ for all 
+vertices $v \in V$.
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+Consider any vertex $v$ and let $p = \langle v_0, v_1, \ldots, v_k \rangle$ be a shortest 
+path from $s = v_0$ to $v = v_k$. Since there are no negative cycles, we can assume $p$ is 
+simple, so $k \le |V|-1$.
+
+Initially, $v_0.d = 0 = \delta(s, v_0)$. After $i$ iterations, we have $v_i.d = \delta(s, v_i)$ 
+for all $i$ (by induction). After relaxing edge $(v_{i-1}, v_i)$ in iteration $i$, we have 
+$v_i.d = v_{i-1}.d + w(v_{i-1}, v_i) = \delta(s, v_i)$. After $k \le |V|-1$ iterations, 
+$v_k.d = \delta(s, v_k)$.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Detecting Negative Cycles}
+
+\begin{theorem}{Negative Cycle Detection}{negcycledetect}
+There is a negative-weight cycle reachable from the source $s$ if and only if after running 
+$|V|-1$ iterations of Bellman-Ford, at least one edge $(u,v)$ can still be relaxed 
+(i.e., $v.d > u.d + w(u,v)$).
+\end{theorem}
+
+\begin{proof}
+$(\Rightarrow)$ If a negative cycle is reachable, then shortest paths are not well-defined, 
+and some $v.d$ values will continue to decrease.
+
+$(\Leftarrow)$ If no negative cycle exists, the correctness theorem guarantees $v.d = \delta(s,v)$ 
+after $|V|-1$ iterations. By the triangle inequality, $\delta(s,v) \le \delta(s,u) + w(u,v)$ 
+for all edges, so $v.d \le u.d + w(u,v)$ and no edge can be relaxed.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Complexity Analysis}
+
+\begin{complexity}{Bellman-Ford Algorithm}{bellmanford}
+The Bellman-Ford algorithm runs in $O(|V| \cdot |E|)$ time:
+\begin{itemize}[noitemsep]
+  \item Initialization: $O(|V|)$
+  \item Main loop: $|V|-1$ iterations, each relaxing all $|E|$ edges: $O(|V| \cdot |E|)$
+  \item Negative cycle check: $O(|E|)$
+\end{itemize}
+Total: $O(|V| \cdot |E|)$.
+\end{complexity}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Dijkstra's Algorithm}
+\addcontentsline{toc}{subsection}{Dijkstra's Algorithm}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithm for Non-Negative Weights}
+
+Dijkstra's algorithm is a faster algorithm for the single-source shortest path problem when 
+all edge weights are non-negative.
+
+\textbf{Idea:} Similar to Prim's algorithm for MST. Maintain a set $S$ of vertices whose 
+shortest-path distances from the source are already known. Greedily grow $S$: at each step, 
+add the vertex $v \notin S$ with minimum shortest-path estimate $v.d$.
+
+\begin{algorithm}[H]
+\caption{Dijkstra's Algorithm}
+\begin{algorithmic}[1]
+\Procedure{Dijkstra}{$G, w, s$}
+  \State Initialize: $s.d \gets 0$, $v.d \gets \infty$ for all $v \neq s$, $v.\pi \gets \text{NIL}$ for all $v$
+  \State $S \gets \emptyset$
+  \State $Q \gets V$ \AlgComment{Min-priority queue keyed by $v.d$}
+  \While{$Q \neq \emptyset$}
+    \State $u \gets$ \Call{Extract-Min}{$Q$}
+    \State $S \gets S \cup \{u\}$
+    \For{each vertex $v \in \text{Adj}[u]$}
+      \State \Call{Relax}{$u, v, w$}
+      \If{$v.d$ decreased}
+        \State \Call{Decrease-Key}{$Q, v, v.d$}
+      \EndIf
+    \EndFor
+  \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Correctness}
+
+\begin{theorem}{Dijkstra's Correctness}{dijkstracorrect}
+If all edge weights are non-negative, Dijkstra's algorithm correctly computes shortest paths 
+from the source $s$ to all vertices.
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+\textbf{Loop invariant:} At the start of each iteration of the while loop, for all vertices 
+$v \in S$, we have $v.d = \delta(s,v)$.
+
+\textbf{Maintenance:} Let $u$ be the vertex added to $S$. We claim $u.d = \delta(s,u)$. 
+Suppose not, and let $y$ be the first vertex along a shorter path to $u$ that is not in $S$. 
+Let $x$ be $y$'s predecessor in $S$. Since we chose $u$ and not $y$, we have $u.d \le y.d$. 
+But the path $s \leadsto x \to y$ is a prefix of a shortest path to $u$, so 
+$\delta(s,y) \le \delta(s,u)$. Since weights are non-negative, 
+$y.d = \delta(s,y) \le \delta(s,u) \le u.d \le y.d$, so $u.d = \delta(s,u)$.
+\end{proof}
+
+\begin{remark}{Why Non-Negative Weights?}{nonneg}
+Dijkstra's algorithm fails with negative weights because once a vertex is added to $S$, we 
+assume its shortest path is final. A negative edge could later provide a shorter path, 
+violating this assumption.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Implementation and Complexity}
+
+Like Prim's algorithm, Dijkstra's performance depends on the priority queue implementation.
+
+\begin{complexity}{Dijkstra's Algorithm}{dijkstra}
+With a binary min-heap, Dijkstra's algorithm runs in $O(|E| \log |V|)$ time:
+\begin{itemize}[noitemsep]
+  \item Initialization: $O(|V|)$
+  \item While loop: $|V|$ Extract-Min operations: $O(|V| \log |V|)$
+  \item At most $|E|$ Decrease-Key operations: $O(|E| \log |V|)$
+\end{itemize}
+Total: $O(|E| \log |V|)$.
+
+With a Fibonacci heap, the time improves to $O(|V| \log |V| + |E|)$.
+\end{complexity}
+
+\textbf{Comparison with Bellman-Ford:}
+\begin{itemize}[noitemsep]
+  \item Bellman-Ford: $O(|V| \cdot |E|)$, handles negative weights, detects negative cycles
+  \item Dijkstra: $O(|E| \log |V|)$, requires non-negative weights only
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Shortest Path Problem:} Find minimum-weight paths from a source vertex to all 
+        other vertices in a weighted directed graph.
+  \item \textbf{Relaxation:} Key operation that improves shortest-path estimates by checking 
+        if going through an intermediate vertex yields a shorter path.
+  \item \textbf{Bellman-Ford Algorithm:} Handles negative edge weights and detects negative cycles. 
+        Time: $O(|V| \cdot |E|)$.
+  \item \textbf{Correctness:} After $|V|-1$ iterations of relaxing all edges, shortest paths 
+        are found (if no negative cycles exist).
+  \item \textbf{Negative Cycle Detection:} If any edge can still be relaxed after $|V|-1$ 
+        iterations, a negative cycle exists.
+  \item \textbf{Dijkstra's Algorithm:} Greedy approach for non-negative weights. Uses priority 
+        queue like Prim's MST algorithm. Time: $O(|E| \log |V|)$ with binary heap.
+  \item \textbf{Correctness:} Maintains invariant that once a vertex is processed, its 
+        shortest-path distance is final. Requires non-negative weights.
+  \item Choose Bellman-Ford for negative weights or cycle detection; choose Dijkstra for 
+        better performance when all weights are non-negative.
+\end{itemize}
+\end{tcolorbox}
