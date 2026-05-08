@@ -1,0 +1,433 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 19: Shortest Paths — Bellman-Ford, Dijkstra, and Problem Solving
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Kruskal's Algorithm (Recap)}
+\addcontentsline{toc}{subsection}{Kruskal's Algorithm (Recap)}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Algorithm Description}
+
+Kruskal's algorithm builds a Minimum Spanning Tree (MST) by starting from an empty forest $T$ and
+greedily maintaining it:
+
+\begin{itemize}[noitemsep]
+  \item At each step, add the cheapest edge that does not create a cycle.
+  \item Repeat until all vertices are connected.
+\end{itemize}
+
+\textbf{Claim:} $T$ is always a sub-forest of some MST (proof by induction on the number of
+edges/components in $T$).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Implementation with Union-Find}
+
+In each iteration we need to check whether the cheapest edge creates a cycle.
+This is equivalent to checking whether its two endpoints belong to the same connected component
+$\Rightarrow$ use the \textbf{disjoint-set (union-find)} data structure.
+
+\begin{itemize}[noitemsep]
+  \item Initially, each vertex is its own singleton set.
+  \item When edge $(u, v)$ is added to $T$, perform \textsc{Union} of the two components.
+  \item To test for a cycle, compare \textsc{Find-Set}$(u)$ and \textsc{Find-Set}$(v)$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Complexity Analysis}
+
+\begin{complexity}{Kruskal's Algorithm}{kruskal}
+\begin{itemize}[noitemsep]
+  \item Initialize $A$: $O(1)$
+  \item First for-loop: $|V|$ \textsc{Make-Set} operations
+  \item Sort $E$: $O(|E| \log |E|)$
+  \item Second for-loop: $O(|E|)$ \textsc{Find-Set} and \textsc{Union} operations
+  \item Total: $O\bigl((|V|+|E|)\,\alpha(|V|)\bigr) + O(|E|\log|E|) = O(|E|\log|E|) = O(|E|\log|V|)$
+\end{itemize}
+\textbf{Note:} If edges are already sorted, the time reduces to $O(|E|\,\alpha(|V|))$,
+which is almost linear.
+\end{complexity}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Problem Solving — MST Applications}
+\addcontentsline{toc}{subsection}{Problem Solving — MST Applications}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{remark}{Problem 1 — Minimum Feedback Edge Set}{feedbackedge}
+A \textbf{feedback edge set} of a graph $G$ is a subset $F \subseteq E$ such that every cycle
+in $G$ contains at least one edge in $F$. Equivalently, removing all edges in $F$ makes $G$ acyclic.
+
+\textbf{Goal:} Compute the minimum-weight feedback edge set.
+
+\textbf{Key insight:} $F = E \setminus T$, where $T$ is a maximum spanning tree of $G$.
+Equivalently, take all edges \emph{not} in the MST: the MST spans the graph without cycles,
+so the remaining edges form a minimal set that covers all cycles.
+\end{remark}
+
+\begin{remark}{Problem 2 — MST Cut and Cycle Properties}{mstprops}
+Let $G = (V, E)$ be a connected graph with distinct edge weights.
+\begin{enumerate}[noitemsep]
+  \item \textbf{Cut property:} For any partition of $V$ into two subsets, the minimum-weight
+        edge crossing the cut is in every MST.
+  \item \textbf{Cycle property:} The maximum-weight edge in any cycle of $G$ is \emph{not}
+        in the MST.
+\end{enumerate}
+\end{remark}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{The Shortest Path Problem}
+\addcontentsline{toc}{subsection}{The Shortest Path Problem}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Definition}
+
+\begin{definition}{Shortest Path Problem}{shortestpath}
+\textbf{Input:} A directed graph $G = (V, E)$ with edge weights $w: E \to \mathbb{R}$.
+
+The \textbf{weight of a path} $p = \langle v_0, v_1, \ldots, v_k \rangle$ is:
+\[
+  w(p) = \sum_{i=1}^{k} w(v_{i-1}, v_i)
+\]
+
+The \textbf{shortest-path weight} from $u$ to $v$ is:
+\[
+  \delta(u,v) = \begin{cases}
+    \min\{w(p) : u \leadsto v\} & \text{if a path from } u \text{ to } v \text{ exists} \\
+    \infty & \text{otherwise}
+  \end{cases}
+\]
+
+A \textbf{shortest path} from $u$ to $v$ is any path $p$ with $w(p) = \delta(u,v)$.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Variants}
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Single-source:} Find shortest paths from a source $s$ to every other vertex.
+  \item \textbf{Single-destination:} Find shortest paths to a given destination from all vertices.
+        Can be solved by single-source after reversing all edge directions.
+  \item \textbf{Single-pair:} Find the shortest path from $u$ to $v$.
+        No algorithm known that improves over single-source in the worst case.
+  \item \textbf{All-pairs:} Find shortest paths for every pair $(u,v)$.
+        Can be solved by running single-source for each vertex; better algorithms also exist.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Negative Weights and Applications}
+\addcontentsline{toc}{subsection}{Negative Weights and Applications}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Negative-Weight Edges}
+
+We allow negative edge weights in the graph.
+
+\begin{remark}{Negative-Weight Cycles}{negcycle}
+If a negative-weight cycle is reachable from the source, shortest paths are undefined: we can
+traverse the cycle repeatedly to obtain paths of arbitrarily negative weight (length $-\infty$).
+
+\begin{itemize}[noitemsep]
+  \item Some algorithms (e.g.\ Dijkstra's) only work with non-negative weights.
+  \item Bellman-Ford handles negative weights and can detect negative cycles.
+\end{itemize}
+\end{remark}
+
+\subsection{Why Negative Weights?}
+
+\textbf{Application:} Buying and selling currency (arbitrage detection).
+Model currencies as vertices and log-exchange rates as edge weights.
+A negative cycle in this graph corresponds to an arbitrage opportunity
+(a sequence of trades that yields a net profit).
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Bellman-Ford Algorithm}
+\addcontentsline{toc}{subsection}{Bellman-Ford Algorithm}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Setup and the Relax Operation}
+
+For each vertex $v \in V$, maintain:
+\begin{itemize}[noitemsep]
+  \item $\ell(v)$: current upper estimate of the shortest-path length from $s$ to $v$.
+  \item $\pi(v)$: predecessor of $v$ on the current best path from $s$.
+\end{itemize}
+
+\textbf{Initialization:} $\ell(s) = 0$, $\ell(v) = \infty$ for $v \neq s$, $\pi(v) = \text{NIL}$.
+
+The key subroutine is \textbf{relaxation}:
+
+\begin{algorithm}[H]
+\caption{Relax Operation}
+\begin{algorithmic}[1]
+\Procedure{Relax}{$u, v, w$}
+  \If{$\ell(v) > \ell(u) + w(u,v)$}
+    \State $\ell(v) \gets \ell(u) + w(u,v)$ \AlgComment{Improve estimate}
+    \State $\pi(v) \gets u$                  \AlgComment{Update predecessor}
+  \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Intuition:} Can we shorten the path to $v$ by routing through $u$?
+If $\ell(u) + w(u,v) < \ell(v)$, then yes.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithm}
+
+\begin{algorithm}[H]
+\caption{Bellman-Ford Algorithm}
+\begin{algorithmic}[1]
+\Procedure{Bellman-Ford}{$G, w, s$}
+  \State \textsc{Init-Single-Source}$(G, s)$ \AlgComment{$\ell(s)\gets 0$; $\ell(v)\gets\infty$; $\pi(v)\gets\text{NIL}$}
+  \For{$i = 1$ to $|V| - 1$}
+    \For{each edge $(u,v) \in E$}
+      \State \Call{Relax}{$u, v, w$}
+    \EndFor
+  \EndFor
+  \For{each edge $(u,v) \in E$} \AlgComment{Check for negative cycles}
+    \If{$\ell(v) > \ell(u) + w(u,v)$}
+      \State \Return \textbf{false} \AlgComment{Negative cycle detected}
+    \EndIf
+  \EndFor
+  \State \Return \textbf{true}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Idea:} After $i$ iterations, the algorithm has found all shortest paths using at most $i$
+edges. Since any simple path has at most $|V|-1$ edges, $|V|-1$ iterations suffice.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Correctness}
+
+\begin{remark}{Key note}{bfnote}
+Bellman-Ford is only guaranteed to return correct shortest paths if \textbf{no negative cycles}
+are reachable from the source. It can, however, be used to \emph{detect} such cycles.
+\end{remark}
+
+\begin{theorem}{Optimal Substructure}{optsubstruct}
+If $\langle s, v_1, \ldots, v_k, v_{k+1} \rangle$ is a shortest path from $s$ to $v_{k+1}$,
+then $\langle s, v_1, \ldots, v_k \rangle$ is a shortest path from $s$ to $v_k$.
+
+\textbf{Proof:} Suppose toward contradiction that there exists a shorter path $p'$ from $s$
+to $v_k$. Then $p' \to (v_k, v_{k+1})$ would be shorter than the assumed shortest path to
+$v_{k+1}$, a contradiction.
+\end{theorem}
+
+\begin{theorem}{Bellman-Ford Correctness}{bfcorrect}
+\textbf{Invariant:} After the $i$-th iteration, $\ell(v)$ is at most the length of the
+shortest path from $s$ to $v$ using at most $i$ edges.
+
+\textbf{Proof by induction:}
+\begin{itemize}[noitemsep]
+  \item \textit{Base case:} After 0 iterations, $\ell(s) = 0$ and $\ell(v) = \infty$ for
+        $v \neq s$. Trivially correct.
+  \item \textit{Inductive step:} Consider any shortest path from $s$ to $v_{k+1}$ using at
+        most $i$ edges. By optimal substructure, the prefix to $v_k$ is the shortest path using
+        at most $i-1$ edges. By the induction hypothesis, $\ell(v_k) \le w(p)$ after the
+        previous iteration. After relaxing $(v_k, v_{k+1})$ in the $i$-th iteration,
+        $\ell(v_{k+1}) \le \ell(v_k) + w(v_k, v_{k+1}) \le$ (length of shortest path using
+        at most $i$ edges).
+\end{itemize}
+
+If there are no negative cycles reachable from $s$, then for any vertex $v$ there is a
+shortest path using at most $n-1$ edges (a path with $\ge n$ edges must contain a cycle of
+non-negative weight that can be removed). Hence Bellman-Ford returns the correct answer after
+$n-1$ iterations.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Detecting Negative Cycles}
+
+\begin{theorem}{Negative Cycle Detection}{negcycledetect}
+There is a negative-weight cycle reachable from the source $s$ \textbf{if and only if} at
+least one $\ell$-value changes when a further (the $n$-th) iteration of Bellman-Ford is
+executed.
+
+\textbf{Proof ($\Rightarrow$):} From the correctness proof, if there are no negative cycles,
+$\ell$-values do not change in the $n$-th iteration.
+
+\textbf{Proof ($\Leftarrow$):} Suppose no $\ell$-value changes in the $n$-th iteration. Then
+for all $(u,v) \in E$: $\ell(u) + w(u,v) \ge \ell(v)$. For any cycle
+$v_0 \to v_1 \to \cdots \to v_{t-1} \to v_0$:
+\[
+  \sum_{i=1}^{t} \ell(v_i) \;\le\; \sum_{i=1}^{t}\bigl(\ell(v_{i-1}) + w(v_{i-1},v_i)\bigr)
+  \;=\; \sum_{i=1}^{t}\ell(v_{i-1}) + \sum_{i=1}^{t} w(v_{i-1},v_i)
+\]
+The two $\ell$-sums cancel (cyclic), giving $0 \le \sum_{i=1}^{t} w(v_{i-1},v_i)$, so the
+cycle is non-negative. Hence no negative cycle is reachable.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Complexity Analysis}
+
+\begin{complexity}{Bellman-Ford Algorithm}{bellmanford}
+\begin{itemize}[noitemsep]
+  \item \textsc{Init-Single-Source}: $\Theta(|V|)$
+  \item Nested for-loops: $|V|-1$ iterations, each relaxing all $|E|$ edges: $\Theta(|E| \cdot |V|)$
+  \item Final negative-cycle check: $\Theta(|E|)$
+\end{itemize}
+\textbf{Total:} $\Theta(|E| \cdot |V|)$
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Final Comments on Bellman-Ford}
+
+\begin{itemize}[noitemsep]
+  \item Can detect negative cycles: run for $n$ iterations and look for cycles in the
+        "shortest-path tree" — they correspond to negative cycles.
+  \item Easy to implement in \textbf{distributed} settings: each vertex repeatedly queries
+        its neighbours for the best path. This makes it useful for routing protocols and
+        dynamic networks.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Solving — Ski Resort Sanity Check}
+
+\begin{remark}{Exam-style Problem}{skires}
+Lindsey Vonn's assistant has mapped a ski resort as a directed weighted graph $G = (V,E)$
+where vertices are stations and edge weights are altitude differences (positive for uphill,
+negative for downhill).
+
+\textbf{Sanity check:} Starting from any station $A$, the total altitude change when returning
+to $A$ should always be 0 — i.e.\ no cycle should have a strictly negative or positive total
+weight.
+
+\textbf{Algorithm:} Run Bellman-Ford from any source vertex.
+\begin{itemize}[noitemsep]
+  \item If the algorithm reports a negative cycle, the map is inconsistent.
+  \item Since the graph models altitude, a positive cycle would also be invalid; check both
+        directions (or equivalently, also check for negative cycles in the reversed graph).
+\end{itemize}
+\textbf{Running time:} $O(|V| \cdot |E|)$.
+\end{remark}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Dijkstra's Algorithm}
+\addcontentsline{toc}{subsection}{Dijkstra's Algorithm}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Algorithm for Non-Negative Weights}
+
+Dijkstra's algorithm is a faster alternative when \textbf{all edge weights are non-negative}.
+
+\textbf{Key ideas:}
+\begin{itemize}[noitemsep]
+  \item Only works with non-negative weights.
+  \item Greedy and faster than Bellman-Ford.
+  \item Similar to Prim's algorithm for MST (essentially a weighted BFS).
+\end{itemize}
+
+\textbf{Approach:} Maintain a set $S$ of vertices whose shortest-path distances are finalised.
+Greedily grow $S$: at each step, add the vertex $v \notin S$ that is \emph{closest} to $s$, i.e.\
+\[
+  \underset{v \notin S}{\arg\min}\; \min_{u \in S}\bigl(\ell(u) + w(u,v)\bigr)
+\]
+
+\begin{algorithm}[H]
+\caption{Dijkstra's Algorithm}
+\begin{algorithmic}[1]
+\Procedure{Dijkstra}{$G, w, s$}
+  \State \textsc{Init-Single-Source}$(G, s)$
+  \State $S \gets \emptyset$
+  \State $Q \gets V$ \AlgComment{Min-priority queue keyed by $\ell(v)$}
+  \While{$Q \neq \emptyset$}
+    \State $u \gets$ \Call{Extract-Min}{$Q$}
+    \State $S \gets S \cup \{u\}$
+    \For{each vertex $v \in \text{Adj}[u]$}
+      \State \Call{Relax}{$u, v, w$}
+      \If{$\ell(v)$ decreased}
+        \State \Call{Decrease-Key}{$Q, v, \ell(v)$}
+      \EndIf
+    \EndFor
+  \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Correctness}
+
+\begin{theorem}{Dijkstra's Correctness}{dijkstracorrect}
+\textbf{Loop invariant:} At the start of each iteration, for all $v \in S$,
+$\ell(v) = \delta(s,v)$ (the distance estimate is exact).
+
+\textbf{Proof sketch:} Let $u$ be the vertex being added to $S$. Suppose $\ell(u) > \delta(s,u)$.
+Let $y$ be the first vertex on a true shortest path to $u$ that is not yet in $S$, and $x$ its
+predecessor in $S$. Since $u$ was chosen over $y$, we have $\ell(u) \le \ell(y)$. But
+$\ell(y) = \delta(s,y) \le \delta(s,u) \le \ell(u)$, so $\ell(u) = \delta(s,u)$,
+contradicting the assumption.
+
+\textbf{Why non-negative weights are required:} Once $u$ is added to $S$, its distance is
+considered final. A negative-weight edge could later yield a shorter path, violating the invariant.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Implementation and Complexity}
+
+Like Prim's, Dijkstra's performance depends on the priority queue implementation.
+
+\begin{complexity}{Dijkstra's Algorithm}{dijkstra}
+\begin{itemize}[noitemsep]
+  \item With a \textbf{binary min-heap}: each operation takes $O(\log |V|)$, giving total
+        $O(|E| \log |V|)$.
+  \item With a \textbf{Fibonacci heap}: $O(|V| \log |V| + |E|)$.
+\end{itemize}
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Comparison: Bellman-Ford vs.\ Dijkstra}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Algorithm} & \textbf{Time complexity} & \textbf{Handles negative weights?} \\
+\midrule
+Bellman-Ford & $O(|V| \cdot |E|)$ & Yes (also detects negative cycles) \\
+Dijkstra     & $O(|E| \log |V|)$  & No (requires non-negative weights) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Solving — Dijkstra Correctness Proof}
+
+\begin{remark}{Exercise}{dijkstraexo}
+Show that Dijkstra's algorithm is correct by proving the following loop invariant:
+
+\medskip
+\textit{``At the start of each iteration, for all $v \in S$, the distance $\ell(v)$ from $s$
+to $v$ is equal to the shortest-path distance $\delta(s,v)$.''} \\
+
+The proof proceeds by induction on $|S|$ as sketched in the correctness theorem above.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Kruskal's Algorithm:} Greedy MST algorithm using union-find. Time:
+        $O(|E|\log|V|)$; almost linear if edges are pre-sorted.
+  \item \textbf{Shortest Path Problem:} Find minimum-weight paths from a source to all other
+        vertices in a weighted directed graph.
+  \item \textbf{Relaxation:} Core operation: improve $\ell(v)$ if routing through $u$ is
+        cheaper.
+  \item \textbf{Bellman-Ford:} Handles negative weights; detects negative cycles.
+        Time: $\Theta(|V| \cdot |E|)$. Correct after $|V|-1$ iterations when no negative
+        cycles exist.
+  \item \textbf{Negative Cycle Detection:} A negative cycle is reachable iff some $\ell$-value
+        decreases in the $n$-th iteration.
+  \item \textbf{Dijkstra's Algorithm:} Greedy, faster alternative for non-negative weights.
+        Uses a min-priority queue (analogous to Prim's MST). Time: $O(|E|\log|V|)$ with a
+        binary heap.
+  \item \textbf{Correctness of Dijkstra:} Maintains the invariant that each finalised vertex
+        has its exact shortest-path distance. Fails with negative weights.
+  \item \textbf{Choice:} Use Bellman-Ford when negative weights or cycle detection are needed;
+        use Dijkstra for better performance on non-negative graphs.
+\end{itemize}
+\end{tcolorbox}
