@@ -1,0 +1,345 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lectures 20–21: Probabilistic Analysis, Randomized Algorithms & Hash Tables
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Probabilistic Analysis and Randomized Algorithms}
+\addcontentsline{toc}{subsection}{Probabilistic Analysis and Randomized Algorithms}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Motivation}
+
+Worst-case analysis can be overly pessimistic. Two complementary approaches exist:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Average-case analysis:} Assume the input is drawn from some probability
+        distribution and analyse the expected behaviour.
+  \item \textbf{Amortized analysis:} Analyse the average cost per operation over a sequence
+        of operations (no probability involved).
+  \item \textbf{Randomization:} The algorithm itself introduces randomness (e.g.\ choosing
+        the pivot in quicksort at random) to avoid worst-case inputs and to foil adversarial
+        users who might try to craft bad inputs.
+  \item Randomization is also \textbf{necessary} in cryptography. Obtaining randomness raises
+        its own questions (extractors, pseudorandom generators).
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Probabilistic Analysis: The Hiring Problem}
+\addcontentsline{toc}{subsection}{The Hiring Problem}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Problem Setup}
+
+The NY Knicks interview $n$ basketball candidates one by one. They adopt the strategy:
+\emph{hire a candidate if and only if they are taller than every previously seen candidate}.
+
+\textbf{Question:} How many candidates do we (temporarily) hire?
+
+\textbf{Worst case:} If candidates arrive in increasing order of height, we hire all $n$.
+This happens in only one specific permutation of $n!$, so it is very unlikely.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Indicator Random Variables}
+
+\begin{definition}{Indicator Random Variable}{indicatorRV}
+Given a sample space $\Omega$ and an event $A$, the \textbf{indicator random variable}
+of $A$ is:
+\[
+  I\{A\} = \begin{cases} 1 & \text{if } A \text{ occurs} \\ 0 & \text{otherwise} \end{cases}
+\]
+
+\textbf{Lemma:} For any event $A$, let $X_A = I\{A\}$. Then $\mathbf{E}[X_A] = \Pr[A]$.
+
+\textbf{Proof:} $\mathbf{E}[X_A] = 1 \cdot \Pr\{A\} + 0 \cdot \Pr\{\bar{A}\} = \Pr\{A\}$.
+\end{definition}
+
+\textbf{Key tool — Linearity of Expectation:} For any random variables $X$ and $Y$ and
+constants $a, b$:
+\[
+  \mathbf{E}[aX + bY] = a\,\mathbf{E}[X] + b\,\mathbf{E}[Y]
+\]
+This holds \emph{even if $X$ and $Y$ are dependent}.
+
+\textbf{Example — $n$ coin flips:} Let $X_i = I\{\text{flip } i \text{ is heads}\}$.
+The total number of heads $X = X_1 + \cdots + X_n$. By linearity:
+\[
+  \mathbf{E}[X] = \sum_{i=1}^{n} \mathbf{E}[X_i] = \sum_{i=1}^{n} \Pr\{H\} = \frac{n}{2}
+\]
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Analysis of the Hiring Problem}
+
+Assume candidates arrive in a uniformly random order. Define indicator variables:
+\[
+  X_i = I\{\text{candidate } i \text{ is hired}\}, \quad X = X_1 + X_2 + \cdots + X_n
+\]
+
+\textbf{Key observation:} Candidate $i$ is hired if and only if they are the tallest among
+the first $i$ candidates. Since the order is random, any of the first $i$ is equally likely
+to be the tallest, so:
+\[
+  \Pr\{\text{candidate } i \text{ is hired}\} = \frac{1}{i}
+\]
+
+By the linearity of expectation:
+\[
+  \mathbf{E}[X] = \sum_{i=1}^{n} \mathbf{E}[X_i] = \sum_{i=1}^{n} \Pr\{\text{candidate } i \text{ is hired}\}
+  = \sum_{i=1}^{n} \frac{1}{i} = H_n = \ln n + O(1)
+\]
+
+where $H_n$ is the $n$-th harmonic number.
+
+\begin{remark}{Hiring Problem Conclusions}{hiringconclusion}
+\begin{itemize}[noitemsep]
+  \item The \textbf{expected number of hires} is $\Theta(\ln n)$, much better than worst case $n$.
+  \item $\Pr\{\text{hire exactly 1 candidate}\} = 1/n$ (tallest arrives first).
+  \item $\Pr\{\text{hire all } n \text{ candidates}\} = 1/n!$ (strictly increasing order).
+  \item Examples: $n=6 \Rightarrow 2.45$, $n=100 \Rightarrow 5.19$, $n=10000 \Rightarrow 9.79$.
+\end{itemize}
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Randomized Algorithm}
+
+Instead of assuming a random arrival order, the algorithm itself \textbf{shuffles the
+candidates into a random order} before beginning the interviews. This guards against
+adversarial inputs and guarantees the same expected $O(\ln n)$ hires regardless of the
+original order.
+
+\begin{remark}{Generating an Unbiased Bit}{unbiasedbit}
+Given a biased coin \textsc{Random} returning 1 with probability $p$ and 0 with probability
+$1-p$ (unknown $p \neq 0, 1$):
+\begin{enumerate}[noitemsep]
+  \item Draw a pair $(a, b)$ where $a = \textsc{Random}()$ and $b = \textsc{Random}()$.
+  \item If $a \neq b$, return $a$ (since $\Pr[a=1, b=0] = \Pr[a=0, b=1] = p(1-p)$).
+  \item Otherwise, draw a new pair.
+\end{enumerate}
+This produces an unbiased bit because $\Pr[\text{return } 1] = \Pr[\text{return } 0] = p(1-p)$.
+\end{remark}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{The Birthday Paradox}
+\addcontentsline{toc}{subsection}{The Birthday Paradox}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Statement}
+
+\textbf{Question:} How many people must be in a room so that two of them share a birthday
+with probability at least 50\%? (Assume each of the 365 days is equally likely.)
+
+\begin{itemize}[noitemsep]
+  \item Trivially: 366 people guarantee a collision (pigeonhole).
+  \item Surprisingly: only \textbf{23 people} are needed for a 50\% probability, and
+        \textbf{57 people} suffice for 99\%.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Birthday Lemma}
+
+\begin{theorem}{Birthday Lemma}{birthdaylemma}
+If $q > 1.78\sqrt{|M|}$, then the probability that a function chosen uniformly at random
+$f:\{1, 2, \ldots, q\} \to M$ is injective is at most $\tfrac{1}{2}$.
+
+\textbf{Proof.} Let $m = |M|$. The probability that $f$ is injective (no two inputs
+share an output) is:
+\[
+  \frac{m}{m} \cdot \frac{m-1}{m} \cdot \frac{m-2}{m} \cdots \frac{m-(q-1)}{m}
+\]
+Since $e^{-x} > 1 - x$, this product is less than:
+\[
+  e^{0} \cdot e^{-1/m} \cdot e^{-2/m} \cdots e^{-(q-1)/m} = e^{-q(q-1)/(2m)}
+\]
+This is at most $\tfrac{1}{2}$ when:
+\[
+  q \;\ge\; \frac{1 + \sqrt{1 + 8\ln 2}}{2}\,\sqrt{m} \;\approx\; 1.78\sqrt{m}
+\]
+\end{theorem}
+
+\textbf{Implication for hashing:} To store $K$ keys in a table of size $m$ without any
+collision with good probability, we need $m > K^2$. For a library with 10{,}000 books,
+this would require an array of size $10^8$ — completely impractical.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Hash Functions and Tables}
+\addcontentsline{toc}{subsection}{Hash Functions and Tables}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Direct-Address Tables}
+
+A \textbf{direct-address table} $T$ has one slot for each possible key. An element with
+key $k$ is stored in $T[k]$.
+
+\begin{algorithm}[H]
+\caption{Direct-Address Table Operations}
+\begin{algorithmic}[1]
+\Procedure{Direct-Address-Search}{$T, k$}
+  \State \Return $T[k]$
+\EndProcedure
+\Procedure{Direct-Address-Insert}{$T, x$}
+  \State $T[x.\text{key}] \gets x$
+\EndProcedure
+\Procedure{Direct-Address-Delete}{$T, x$}
+  \State $T[x.\text{key}] \gets \text{NIL}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Positives} & \textbf{Negatives} \\
+\midrule
+$O(1)$ per operation & Space $O(|U|)$ where $U$ is the universe of keys \\
+Simple implementation & Most applications store a tiny fraction of $|U|$ \\
+                       & Wish for space proportional to items stored \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Hash Tables}
+
+\begin{definition}{Hash Table}{hashtable}
+A \textbf{hash table} stores $K$ keys using space $\Theta(K)$. An element with key $k$
+is stored in slot $h(k)$, where $h: U \to \{0, 1, \ldots, m-1\}$ is the \textbf{hash function}
+and $m$ is the table size (much smaller than $|U|$).
+
+\textbf{Simple uniform hashing assumption:} $h$ maps each new key equally likely to any of
+the $m$ slots, independently of all other keys. The \textbf{load factor} $\alpha = n/m$
+is the average number of elements per slot (where $n$ is the number of keys stored).
+\end{definition}
+
+\textbf{Desired properties of a hash function:}
+\begin{itemize}[noitemsep]
+  \item Efficiently computable.
+  \item Distributes keys uniformly across slots (to minimise collisions).
+  \item Deterministic: $h(k)$ is always the same value for the same $k$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Collisions and Chaining}
+
+A \textbf{collision} occurs when two keys $k_i \neq k_j$ satisfy $h(k_i) = h(k_j)$.
+By the Birthday Lemma, collisions are unavoidable unless $m > K^2$, which is impractical.
+
+\textbf{Collision resolution by chaining:} Each slot $T[j]$ holds a doubly linked list of
+all elements that hash to $j$.
+
+\begin{algorithm}[H]
+\caption{Chained Hash Table Operations}
+\begin{algorithmic}[1]
+\Procedure{Chained-Hash-Search}{$T, k$}
+  \State Search for an element with key $k$ in list $T[h(k)]$
+\EndProcedure
+\Procedure{Chained-Hash-Insert}{$T, x$}
+  \State Insert $x$ at the head of list $T[h(x.\text{key})]$
+\EndProcedure
+\Procedure{Chained-Hash-Delete}{$T, x$}
+  \State Delete $x$ from the list $T[h(x.\text{key})]$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Insertion:} $O(1)$ (insert at head).
+  \item \textbf{Deletion:} $O(1)$ since the list is doubly linked and we have a pointer to the element.
+  \item \textbf{Space:} $O(m + K)$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Running Time Analysis}
+
+Let $n_j$ be the length of list $T[j]$. Then $n = n_0 + n_1 + \cdots + n_{m-1}$ and
+under simple uniform hashing $\mathbf{E}[n_j] = \alpha = n/m$.
+
+\begin{theorem}{Unsuccessful Search}{unsuccesssearch}
+Under simple uniform hashing, an unsuccessful search takes expected time $\Theta(1 + \alpha)$.
+
+\textbf{Proof:} Any key not in the table is equally likely to hash to any slot. An
+unsuccessful search for key $k$ traverses the entire list $T[h(k)]$, which has expected
+length $\mathbf{E}[n_{h(k)}] = \alpha$. Adding the $O(1)$ cost of computing $h(k)$,
+the total expected time is $\Theta(1 + \alpha)$.
+\end{theorem}
+
+\begin{theorem}{Successful Search}{successsearch}
+Under simple uniform hashing, a successful search takes expected time $\Theta(1 + \alpha)$.
+
+\textbf{Proof:} Let $x_i$ be the $i$-th element inserted and $k_i = \text{key}[x_i]$.
+For all $i < j$, define the indicator variable $X_{ij} = I\{h(k_i) = h(k_j)\}$.
+Under simple uniform hashing, $\mathbf{E}[X_{ij}] = 1/m$.
+
+The expected number of elements examined in a successful search is:
+\[
+  \mathbf{E}\!\left[\frac{1}{n}\sum_{i=1}^{n}\!\left(1 + \sum_{j=i+1}^{n} X_{ij}\right)\right]
+  = \frac{1}{n}\sum_{i=1}^{n}\!\left(1 + \sum_{j=i+1}^{n} \mathbf{E}[X_{ij}]\right)
+  = \frac{1}{n}\sum_{i=1}^{n}\!\left(1 + \sum_{j=i+1}^{n} \frac{1}{m}\right)
+  = \cdots = 1 + \frac{\alpha}{2} - \frac{\alpha}{2n}
+\]
+which is $\Theta(1 + \alpha)$.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Consequence: Constant-Time Operations}
+
+\begin{complexity}{Hash Table with Chaining}{hashcomplexity}
+If we choose the table size $m = \Theta(n)$ (proportional to the number of elements stored),
+then $\alpha = n/m = \Theta(1)$ and:
+\begin{itemize}[noitemsep]
+  \item \textbf{Insertion:} $O(1)$
+  \item \textbf{Deletion:} $O(1)$
+  \item \textbf{Search (expected):} $O(1)$
+  \item \textbf{Space:} $\Theta(n)$
+\end{itemize}
+\end{complexity}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Examples of Hash Functions}
+
+Designing good hash functions is a large research area that depends on the data distribution.
+Two basic methods are:
+
+\textbf{Division method:}
+\[
+  h(k) = k \bmod m
+\]
+$m$ is often chosen to be a prime not too close to a power of~2, to spread keys evenly.
+
+\textbf{Multiplicative method:}
+\[
+  h(k) = \lfloor m \cdot \{Ak\} \rfloor
+\]
+where $\{Ak\}$ denotes the fractional part of $Ak$. Knuth suggests $A \approx (\sqrt{5}-1)/2
+\approx 0.618$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Lecture Summary}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Probabilistic Analysis:} Instead of worst-case, analyse expected performance
+        assuming random input (or random algorithm choices).
+  \item \textbf{Indicator Random Variables:} $I\{A\}$ is 1 if $A$ occurs, 0 otherwise.
+        Lemma: $\mathbf{E}[I\{A\}] = \Pr[A]$.
+  \item \textbf{Linearity of Expectation:} $\mathbf{E}[aX + bY] = a\mathbf{E}[X] + b\mathbf{E}[Y]$,
+        even for dependent variables. Allows decomposing complex random variables.
+  \item \textbf{Hiring Problem:} Expected number of hires is $H_n = \ln n + O(1)$ when
+        candidates arrive in random order.
+  \item \textbf{Randomized Algorithms:} The algorithm itself shuffles the input to guarantee
+        good expected performance against any adversary.
+  \item \textbf{Birthday Paradox:} Only $\approx 1.78\sqrt{m}$ items are needed before a
+        collision in a universe of size $m$ occurs with constant probability. Collisions in
+        hash tables are unavoidable unless the table is quadratically large.
+  \item \textbf{Direct-Address Tables:} $O(1)$ operations but $O(|U|)$ space; impractical
+        for large universes.
+  \item \textbf{Hash Tables with Chaining:} $\Theta(K)$ space, $O(1)$ insert/delete, and
+        $\Theta(1 + \alpha)$ expected search time.
+  \item \textbf{Load Factor:} $\alpha = n/m$. Choosing $m = \Theta(n)$ gives $\alpha = \Theta(1)$
+        and all operations in expected $O(1)$ time.
+  \item \textbf{Hash Function Design:} Two basic methods are the division method
+        ($h(k) = k \bmod m$) and the multiplicative method. Choice depends on data distribution.
+\end{itemize}
+\end{tcolorbox}
