@@ -1,0 +1,283 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% Lecture 22: Hashing (Summary) and Quick Sort
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Hash Tables: Summary (Recap)}
+\addcontentsline{toc}{subsection}{Hash Tables: Summary (Recap)}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{complexity}{Hash Tables}{hashrecap}
+Hash tables efficiently implement the following operations:
+\begin{itemize}[noitemsep]
+  \item \textbf{Insert:} $O(1)$
+  \item \textbf{Delete:} $O(1)$
+  \item \textbf{Search:} Expected $O(n/m)$ with a good hash function (i.e.\ $O(1)$ when
+        $m = \Theta(n)$)
+\end{itemize}
+Collisions cannot be avoided without having $m \gg n^2$ (Birthday Lemma). Instead, they are
+handled using, for example, \textbf{chaining}.
+\end{complexity}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Quick Sort}
+\addcontentsline{toc}{subsection}{Quick Sort}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Overview}
+
+\begin{itemize}[noitemsep]
+  \item The sorting algorithm of choice in many computer systems.
+  \item Easy to implement.
+  \item Fast in practice (and as we will prove in theory).
+  \item Like merge sort, based on the \textbf{divide-and-conquer} paradigm.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Divide-and-Conquer Structure}
+
+To sort the subarray $A[p \ldots r]$:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Divide:} Partition $A[p \ldots r]$ into two (possibly empty) subarrays
+        $A[p \ldots q-1]$ and $A[q+1 \ldots r]$, such that every element in the left subarray
+        is $\le A[q]$ and every element in the right subarray is $\ge A[q]$. The element
+        $A[q]$ is called the \textbf{pivot}.
+  \item \textbf{Conquer:} Sort the two subarrays by recursive calls to \textsc{Quicksort}.
+  \item \textbf{Combine:} No work needed — the subarrays are sorted in place.
+\end{itemize}
+
+\begin{algorithm}[H]
+\caption{Quick Sort}
+\begin{algorithmic}[1]
+\Procedure{Quicksort}{$A, p, r$}
+  \If{$p < r$}
+    \State $q \gets$ \Call{Partition}{$A, p, r$}
+    \State \Call{Quicksort}{$A, p, q-1$}
+    \State \Call{Quicksort}{$A, q+1, r$}
+  \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{The Partition Procedure}
+
+\textsc{Partition} always selects the last element $A[r]$ as the pivot and rearranges the
+subarray in place.
+
+\begin{algorithm}[H]
+\caption{Partition}
+\begin{algorithmic}[1]
+\Procedure{Partition}{$A, p, r$}
+  \State $x \gets A[r]$ \AlgComment{Pivot}
+  \State $i \gets p - 1$
+  \For{$j = p$ \textbf{to} $r - 1$}
+    \If{$A[j] \le x$}
+      \State $i \gets i + 1$
+      \State exchange $A[i]$ with $A[j]$
+    \EndIf
+  \EndFor
+  \State exchange $A[i+1]$ with $A[r]$ \AlgComment{Place pivot in correct position}
+  \State \Return $i + 1$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Correctness of Partition}
+
+\begin{theorem}{Loop Invariant of Partition}{partitioninv}
+At the start of each iteration of the \textbf{for} loop, for any index $k$:
+\begin{enumerate}[noitemsep]
+  \item If $p \le k \le i$, then $A[k] \le x$ (pivot).
+  \item If $i+1 \le k \le j-1$, then $A[k] > x$.
+  \item $A[r] = x$ (pivot remains in place until the final swap).
+\end{enumerate}
+
+\textbf{Initialization:} Before the loop, both subarrays $A[p \ldots i]$ and
+$A[i+1 \ldots j-1]$ are empty, and $A[r] = x$. The invariant holds trivially.
+
+\textbf{Maintenance:} If $A[j] \le x$, increment $i$ and swap $A[i]$ with $A[j]$, then
+increment $j$. If $A[j] > x$, only increment $j$.
+
+\textbf{Termination:} When the loop terminates, $j = r$, so all elements are partitioned
+into $A[p \ldots i] \le x$, $A[i+1 \ldots r-1] > x$, and $A[r] = x$. The final two lines
+swap $A[i+1]$ with $A[r]$, placing the pivot in its correct position $q = i+1$.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Running Time of Partition}
+
+\begin{complexity}{Partition}{partitioncost}
+\begin{itemize}[noitemsep]
+  \item The \textbf{for} loop runs $n := r - p + 1$ times.
+  \item Each iteration takes $\Theta(1)$.
+  \item Total: $\Theta(n)$ for an array of length $n$.
+  \item The number of comparisons made is $\approx n$.
+\end{itemize}
+\end{complexity}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Running Time Analysis of Quick Sort}
+\addcontentsline{toc}{subsection}{Running Time Analysis of Quick Sort}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Worst Case}
+
+The worst case occurs when \textsc{Partition} always produces a maximally unbalanced split:
+one subarray of size $n-1$ and one of size $0$. This happens when the input is already sorted
+(ascending or descending) and the pivot is always the smallest or largest element.
+
+The recursion tree has $n$ levels each costing $\Theta(n), \Theta(n-1), \ldots, \Theta(1)$:
+\[
+  T(n) = T(n-1) + T(0) + \Theta(n) = T(n-1) + \Theta(n)
+  \;\Rightarrow\; T(n) = \Theta(n^2)
+\]
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Best Case}
+
+The best case occurs when \textsc{Partition} always produces a perfectly balanced split,
+with both subarrays of size $n/2$:
+\[
+  T(n) = 2T(n/2) + \Theta(n) = \Theta(n \log n)
+\]
+by the Master Theorem.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Average Case — Intuition}
+
+\begin{remark}{Unbalanced splits still give $\Theta(n \log n)$}{avgcase}
+Even a constant-ratio unbalanced split (e.g.\ always $9$-to-$1$) gives:
+\[
+  T(n) = T\!\left(\tfrac{9n}{10}\right) + T\!\left(\tfrac{n}{10}\right) + \Theta(n) = \Theta(n \log n)
+\]
+In practice, splits alternate between good and bad. Alternating best-case and worst-case splits
+yields the same asymptotic running time $\Theta(n \log n)$ as always splitting evenly, because
+the total work at each level of the tree remains $\Theta(n)$.
+\end{remark}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Randomized Quick Sort}
+\addcontentsline{toc}{subsection}{Randomized Quick Sort}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Motivation and Algorithm}
+
+The deterministic worst case occurs on sorted inputs — exactly the inputs that arise most
+often in practice. To eliminate this vulnerability:
+
+\begin{itemize}[noitemsep]
+  \item Instead of always using $A[r]$ as the pivot, \textbf{randomly select} a pivot from
+        $A[p \ldots r]$ and swap it with $A[r]$ before calling \textsc{Partition}.
+  \item This guarantees good expected performance \textbf{for any input}, not just random ones.
+\end{itemize}
+
+\begin{remark}{Key distinction}{randvsdeter}
+There is a huge difference between:
+\begin{itemize}[noitemsep]
+  \item \emph{Expected running time over all inputs} (average-case of deterministic algorithm):
+        depends on input distribution, can be manipulated by an adversary.
+  \item \emph{Expected running time for any fixed input} (randomized algorithm): the randomness
+        is internal; no adversary can force worst-case behaviour.
+\end{itemize}
+\end{remark}
+
+\begin{algorithm}[H]
+\caption{Randomized Quick Sort}
+\begin{algorithmic}[1]
+\Procedure{Randomized-Partition}{$A, p, r$}
+  \State $i \gets \text{\textsc{Random}}(p, r)$ \AlgComment{Pick a random index in $[p, r]$}
+  \State exchange $A[r]$ with $A[i]$
+  \State \Return \Call{Partition}{$A, p, r$}
+\EndProcedure
+\Procedure{Randomized-Quicksort}{$A, p, r$}
+  \If{$p < r$}
+    \State $q \gets$ \Call{Randomized-Partition}{$A, p, r$}
+    \State \Call{Randomized-Quicksort}{$A, p, q-1$}
+    \State \Call{Randomized-Quicksort}{$A, q+1, r$}
+  \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Expected Running Time Analysis}
+
+\begin{theorem}{Expected Running Time of Randomized Quicksort}{randqssort}
+Randomized \textsc{Quicksort} has expected running time $O(n \log n)$ for \emph{any} input of
+size $n$.
+
+\textbf{Proof.}
+
+\textbf{Setup:} The dominant cost is partitioning. Each call to \textsc{Partition} costs
+$O(1)$ plus the number of comparisons in the for loop. Since each element is chosen as pivot
+at most once, \textsc{Partition} is called at most $n$ times. Let $X$ be the total number of
+comparisons across all calls; then the total work is $O(n + X)$.
+
+\textbf{Counting comparisons with indicator variables:} Rename the elements $z_1 < z_2 <
+\cdots < z_n$ (sorted order). Define the set $Z_{ij} = \{z_i, z_{i+1}, \ldots, z_j\}$ and
+the indicator variable:
+\[
+  X_{ij} = I\{z_i \text{ is compared to } z_j\}
+\]
+Since each pair is compared at most once (only when one of them is the pivot), the total
+number of comparisons is:
+\[
+  X = \sum_{i=1}^{n-1} \sum_{j=i+1}^{n} X_{ij}
+\]
+
+\textbf{Applying linearity of expectation:}
+\[
+  \mathbf{E}[X]
+  = \sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \mathbf{E}[X_{ij}]
+  = \sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \Pr[z_i \text{ is compared to } z_j]
+\]
+
+\textbf{Computing the probability:} $z_i$ and $z_j$ are compared if and only if the first
+element chosen as pivot from $Z_{ij}$ is either $z_i$ or $z_j$. If any element strictly
+between them is chosen first, they are separated into different subarrays and never compared.
+Since the pivot is chosen uniformly at random from $Z_{ij}$, which has $j - i + 1$ elements:
+\[
+  \Pr[z_i \text{ is compared to } z_j] = \frac{2}{j - i + 1}
+\]
+
+\textbf{Summing up:} Setting $k = j - i$:
+\[
+  \mathbf{E}[X]
+  = \sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \frac{2}{j-i+1}
+  = \sum_{i=1}^{n-1} \sum_{k=1}^{n-i} \frac{2}{k+1}
+  < \sum_{i=1}^{n-1} \sum_{k=1}^{n} \frac{2}{k}
+  = \sum_{i=1}^{n-1} O(\log n)
+  = O(n \log n)
+\]
+Therefore the expected running time is $O(n + X) = O(n \log n)$.
+\end{theorem}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Summary of Quick Sort}
+
+\begin{tcolorbox}[colback=lightblue, colframe=keyblue, fonttitle=\bfseries,
+                  title={Key Points}]
+\begin{itemize}[noitemsep]
+  \item \textbf{Quick Sort:} Divide-and-conquer sorting algorithm. Pivot partitions the array
+        in place; no merge step needed.
+  \item \textbf{Partition:} Runs in $\Theta(n)$. Loop invariant guarantees correct placement
+        of pivot.
+  \item \textbf{Worst case:} $\Theta(n^2)$ — occurs when partitioning is always maximally
+        unbalanced (e.g.\ already sorted input with last-element pivot).
+  \item \textbf{Best case:} $\Theta(n \log n)$ — perfectly balanced splits every time.
+  \item \textbf{Average case intuition:} Even a constant-ratio split (e.g.\ 9-to-1) gives
+        $\Theta(n \log n)$. Mixing good and bad splits does not change the asymptotic bound.
+  \item \textbf{Randomized Quicksort:} Pick the pivot uniformly at random from the subarray.
+        Guarantees expected $O(n \log n)$ for \emph{any} input, foiling adversarial inputs.
+  \item \textbf{Key proof idea:} $z_i$ and $z_j$ are compared iff one of them is the first
+        pivot chosen from $Z_{ij}$, giving $\Pr[z_i \text{ vs.\ } z_j] = \frac{2}{j-i+1}$.
+        Summing by linearity of expectation yields $\mathbf{E}[X] = O(n \log n)$.
+  \item \textbf{Practical advantages:} In-place, small constants, very efficient in practice.
+\end{itemize}
+\end{tcolorbox}

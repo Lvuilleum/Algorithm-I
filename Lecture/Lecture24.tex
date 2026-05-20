@@ -1,0 +1,317 @@
+% ─── Lecture 24: Online Learning and Experts ─────────────────────────────────
+% To include in main.tex: \section{Lecture 24: Online Learning and Experts}
+%                         \input{Lecture/Lecture24}
+
+\subsection{Introduction: Online vs Offline Algorithms}
+
+\begin{definition}{Offline Algorithm}{offline}
+An algorithm where the \textbf{entire input is known in advance}. The algorithm can plan with full information.\\[0.3em]
+\textit{Examples:} sorting an array, finding a Minimum Spanning Tree (MST).
+\end{definition}
+
+\begin{definition}{Online Algorithm}{online}
+An algorithm where \textbf{input arrives one piece at a time}. The algorithm makes \textbf{irrevocable decisions} without knowledge of future requests.\\[0.3em]
+\textit{Key principle:} The algorithm must act before it knows the whole story.
+\end{definition}
+
+Online decision problems arise in many practical settings:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Setting} & \textbf{Online Decision} \\
+\midrule
+Cache eviction    & Which page to evict? \\
+Online ads        & Which ad to show? \\
+Rent or buy       & Keep renting or buy? \\
+Expert advice     & Whose advice today? \\
+Hiring/selection  & Accept now or wait? \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A reasonable decision may look poor after the future is revealed. The relevant question is not "was the algorithm psychic?" but rather: \textbf{how badly can it be punished for not being psychic?}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Measuring Performance}
+
+\begin{definition}{Competitive Ratio}{competitive}
+Compare the algorithm's cost with the best solution that knew the whole input in advance (the offline optimum):
+\[
+\mathrm{ALG}(I) \leq r \cdot \mathrm{OPT}(I) + c
+\]
+Used when the offline optimum is a meaningful and stable target.
+\end{definition}
+
+When comparing to the full offline optimum is too ambitious, we use a weaker but still meaningful benchmark.
+
+\begin{definition}{Regret}{regret}
+Compare the algorithm's total loss with the \textbf{best single expert in hindsight}. The extra loss incurred by the algorithm is called \textbf{regret}:
+\[
+\text{regret} = \mathrm{loss}(\mathrm{ALG}) - \min_i \mathrm{loss}(i)
+\]
+Used when "best possible" is too strong or too unstable as a benchmark.
+\end{definition}
+
+\begin{remark}{Performance benchmarks}{bench}
+\textbf{Happiness} $\approx$ outcome $-$ expectation, but happiness is also \textit{relative} to the people next to you. Similarly, algorithm performance is judged relative to what was achievable.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Prediction with Expert Advice}
+
+\subsubsection{The Expert Setting}
+
+Consider the following scenario: every morning, $N$ experts each predict YES or NO (e.g., "will it rain?"). We must make our own prediction before observing the outcome.
+
+\textbf{The game.} For $t = 1, \ldots, T$:
+\begin{enumerate}
+  \item Each expert $i \in \{1, \ldots, N\}$ predicts YES or NO.
+  \item The algorithm predicts YES or NO.
+  \item The true outcome is revealed.
+  \item Everyone who predicted incorrectly receives one \textit{mistake}.
+\end{enumerate}
+
+Let $M_{\mathrm{ALG}}$ denote the number of mistakes of the algorithm, and $M_i$ the number of mistakes of expert $i$.
+
+\textbf{Goal:} Keep $M_{\mathrm{ALG}}$ close to $\min_i M_i$.
+
+\subsubsection{Why Compare to the Best Expert?}
+
+\begin{itemize}
+  \item We cannot promise to make few mistakes on every sequence (e.g., if all experts say YES and the answer is NO, any algorithm using their advice is in trouble).
+  \item But if one expert was consistently good, we would like to discover this quickly.
+  \item \textbf{Regret} asks: is $M_{\mathrm{ALG}} - \min_i M_i$ small?
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Warmup: One Perfect Expert}
+
+\subsubsection{The Elimination Algorithm}
+
+Suppose at least one expert makes \emph{zero} mistakes. We can exploit this with a simple elimination strategy.
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Elimination Algorithm}
+\begin{enumerate}
+  \item Keep the experts who have made \textbf{no mistakes} so far.
+  \item Predict by \textbf{majority vote} among the remaining experts.
+  \item After the outcome is revealed, \textbf{delete} every expert who was wrong.
+\end{enumerate}
+\end{mdframed}
+
+\textbf{Correctness:} The perfect expert is never deleted, so the set of remaining experts is never empty.
+
+\subsubsection{Analysis}
+
+\begin{theorem}{Perfect Expert Guarantee}{perfect}
+If at least one expert makes no mistakes, the Elimination algorithm makes \textbf{at most $\lg N$ mistakes}.
+\end{theorem}
+
+\textbf{Proof sketch.} Suppose the algorithm makes a mistake. Since it followed the majority of remaining experts, at least half of the remaining experts were wrong — and are now deleted. The pool size decreases:
+\[
+N \;\to\; \frac{N}{2} \;\to\; \frac{N}{4} \;\to\; \cdots
+\]
+After more than $\lg N$ mistakes, fewer than one expert would remain — impossible since the perfect expert survives. \hfill$\square$
+
+\textbf{Example:} With $N = 1024$ experts, even a very adversarial sequence causes at most 10 mistakes before the algorithm has essentially identified the perfect expert.
+
+\subsubsection{When Nobody is Perfect}
+
+A first idea: run Elimination until all experts are deleted, then restart with all experts alive. If the best expert makes $M$ mistakes, there are at most $M+1$ restarts, giving:
+\[
+M_{\mathrm{ALG}} \leq (M+1) \lg N
+\]
+This bound is often \textbf{too weak}: the overhead grows \emph{multiplicatively} with $M$. We want an \textbf{additive} penalty instead.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Weighted Majority}
+
+\subsubsection{Soft Elimination}
+
+Instead of deleting an expert after a mistake, we \emph{reduce its influence}:
+\begin{itemize}
+  \item If correct today: \textbf{keep weight}.
+  \item If wrong today: \textbf{halve weight}.
+  \item Wrong often: weight \textbf{becomes negligible}.
+\end{itemize}
+The algorithm listens to a \textbf{weighted majority vote}.
+
+\subsubsection{The Algorithm}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Weighted Majority Algorithm}
+
+Initially set $w_i^{(1)} = 1$ for every expert $i$. For $t = 1, \ldots, T$:
+\begin{enumerate}
+  \item Each expert predicts YES or NO.
+  \item Predict the answer with \textbf{larger total weight}.
+  \item After the outcome is revealed, update:
+    \[
+      w_i^{(t+1)} = \begin{cases} w_i^{(t)} / 2 & \text{if expert } i \text{ was wrong,} \\ w_i^{(t)} & \text{otherwise.} \end{cases}
+    \]
+\end{enumerate}
+\end{mdframed}
+
+Weights act as \textbf{trust scores}: they only decrease when the expert makes a mistake, so a good expert retains much more weight than a bad one.
+
+\subsubsection{Guarantee}
+
+\begin{theorem}{Weighted Majority Bound}{wm}
+Let $M_{\mathrm{WM}}$ be the number of mistakes of Weighted Majority. For every expert $i$:
+\[
+M_{\mathrm{WM}} \leq 2.41 \cdot (M_i + \lg N)
+\]
+Therefore:
+\[
+M_{\mathrm{WM}} \leq 2.41 \cdot \left(\min_i M_i + \lg N\right)
+\]
+\end{theorem}
+
+This is much better than the restarting bound when $M_i$ is large: the overhead is now \textbf{additive} in $\lg N$.
+
+\subsubsection{Analysis via Potential Function}
+
+Define the \textbf{potential} (total weight):
+\[
+\Phi^{(t)} = \sum_{i=1}^{N} w_i^{(t)}
+\]
+
+\textbf{Upper bound} (from algorithm's mistakes): When the algorithm makes a mistake, it followed the weighted majority, so at least half the total weight was on wrong experts. Those weights are halved, giving:
+\[
+\Phi^{(t+1)} \leq \frac{1}{2}\Phi^{(t)} + \frac{1}{2} \cdot \frac{1}{2}\Phi^{(t)} = \frac{3}{4}\Phi^{(t)}
+\]
+After $M_{\mathrm{WM}}$ mistakes:
+\[
+\Phi^{(T+1)} \leq N \left(\frac{3}{4}\right)^{M_{\mathrm{WM}}}
+\]
+
+\textbf{Lower bound} (from a good expert): If expert $i$ makes $M_i$ mistakes, its final weight is $(1/2)^{M_i}$. Since the total weight is at least this:
+\[
+\left(\frac{1}{2}\right)^{M_i} \leq \Phi^{(T+1)}
+\]
+
+\textbf{Combining:}
+\[
+\left(\frac{1}{2}\right)^{M_i} \leq N \left(\frac{3}{4}\right)^{M_{\mathrm{WM}}}
+\]
+Taking base-2 logarithms and rearranging:
+\[
+M_{\mathrm{WM}} \leq \frac{1}{\lg(4/3)}(M_i + \lg N) \approx 2.41\,(M_i + \lg N)
+\]
+
+\textbf{Intuition:} Many algorithm mistakes $\Rightarrow$ total weight becomes tiny. A good expert prevents this from happening.
+
+\subsubsection{Tuning the Penalty}
+
+Halving (multiplying by $1/2$ on a mistake) is a special case. More generally, we can multiply by $(1-\varepsilon)$ for any $\varepsilon \in (0,1)$.
+
+\begin{theorem}{Tunable Weighted Majority}{tunable}
+With a suitable weighted-majority update using parameter $\varepsilon$:
+\[
+M_{\mathrm{WM}} \leq 2(1+\varepsilon)\,M_i + O\!\left(\frac{\lg N}{\varepsilon}\right) \quad \text{for every expert } i
+\]
+\end{theorem}
+
+\textbf{Tradeoff:} Smaller $\varepsilon$ means less overreaction to mistakes (more patient), but slower learning.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Randomized Experts: The Hedge Algorithm}
+
+\subsubsection{Limitation of Weighted Majority}
+
+Weighted Majority is \textbf{deterministic}. An adversary who can observe our prediction can always choose the opposite outcome, forcing a mistake every round. In fact, there exist sequences where deterministic Weighted Majority makes \emph{about twice} as many mistakes as the best expert. To improve the constant, we stop committing to one answer deterministically.
+
+\subsubsection{Randomized Prediction}
+
+Instead of choosing one expert's advice deterministically, we choose a \textbf{distribution} $\mathbf{p}^{(t)} = (p_1^{(t)}, \ldots, p_N^{(t)})$ over experts. If expert $i$ incurs loss $m_i^{(t)} \in [-1, 1]$ on day $t$, our \textbf{expected loss} is:
+\[
+\sum_{i=1}^N p_i^{(t)} m_i^{(t)} = \mathbf{p}^{(t)} \cdot \mathbf{m}^{(t)}
+\]
+This framework covers binary mistakes, but also richer cost structures: money lost, error magnitude, reward minus cost, etc.
+
+\subsubsection{The Hedge Algorithm}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Hedge Algorithm} (parameter $\varepsilon > 0$)
+
+Maintain weights $w_i^{(t)}$. At time $t$:
+\begin{enumerate}
+  \item Play expert $i$ with probability
+    \[
+      p_i^{(t)} = \frac{w_i^{(t)}}{\Phi^{(t)}}, \quad \text{where } \Phi^{(t)} = \sum_j w_j^{(t)}
+    \]
+  \item Observe the loss vector $\mathbf{m}^{(t)}$.
+  \item Update weights:
+    \[
+      w_i^{(t+1)} = w_i^{(t)} \cdot e^{-\varepsilon m_i^{(t)}}
+    \]
+\end{enumerate}
+\end{mdframed}
+
+Low loss $\Rightarrow$ weight increases; high loss $\Rightarrow$ weight decreases. The key distinction from Weighted Majority is the use of the \textbf{exponential update}, which handles continuous losses naturally.
+
+\subsubsection{Hedge Guarantee}
+
+\begin{theorem}{Hedge Regret Bound}{hedge}
+If $m_i^{(t)} \in [-1,1]$ and $\varepsilon \leq 1$, then for every expert $i$:
+\[
+\sum_{t=1}^T \mathbf{p}^{(t)} \cdot \mathbf{m}^{(t)} \;\leq\; \sum_{t=1}^T m_i^{(t)} + \frac{\ln N}{\varepsilon} + \varepsilon T
+\]
+\end{theorem}
+
+Choosing $\varepsilon \approx \sqrt{\ln N / T}$ balances the two additive terms and gives:
+\[
+\text{regret} = O\!\left(\sqrt{T \ln N}\right)
+\]
+The \textbf{average regret} vanishes as $T \to \infty$:
+\[
+\frac{\text{regret}}{T} = O\!\left(\sqrt{\frac{\ln N}{T}}\right) \;\to\; 0
+\]
+This is called \textbf{no-regret} or \textbf{Hannan consistency}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Why Multiplicative Weights is Everywhere}
+
+The Multiplicative Weights / Hedge framework is a small idea with an enormous footprint across computer science:
+
+\begin{itemize}
+  \item \textbf{Boosting} (ML): combine many weak classifiers into a strong one (AdaBoost is a special case).
+  \item \textbf{Game theory}: repeated play with Hedge converges to correlated equilibria.
+  \item \textbf{Optimization}: fast approximate algorithms for linear programs and semidefinite programs (SDPs).
+  \item \textbf{Online learning}: portfolio selection, prediction markets, and adaptive decision making.
+  \item \textbf{Algorithm design}: a standard potential-function proof template.
+\end{itemize}
+
+\begin{remark}{The recurring pattern}{mw}
+\textbf{Multiplicatively reward what worked, but do not completely forget alternatives.}\\[0.3em]
+This is the fundamental principle behind multiplicative weights: unlike additive updates that can send weights negative or zero, exponential updates keep all options alive while shifting mass toward better-performing experts.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Summary}
+
+\begin{center}
+\rowcolors{2}{gray!10}{white}
+\begin{tabular}{p{3cm} p{4.5cm} p{5cm}}
+\toprule
+\textbf{Algorithm} & \textbf{Guarantee} & \textbf{Setting} \\
+\midrule
+Elimination & $M_{\mathrm{ALG}} \leq \lg N$ & One perfect expert exists \\
+Restart Elimination & $M_{\mathrm{ALG}} \leq (M^*+1)\lg N$ & General, but multiplicative overhead \\
+Weighted Majority & $M_{\mathrm{WM}} \leq 2.41(M^* + \lg N)$ & General, deterministic \\
+Hedge & $\text{regret} = O(\sqrt{T\ln N})$ & General, randomized, continuous losses \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+where $M^* = \min_i M_i$ is the number of mistakes of the best expert.
+
+\textbf{Key takeaways:}
+\begin{itemize}
+  \item Online algorithms must make irrevocable decisions without seeing the future.
+  \item When comparing to full hindsight is too ambitious, \textbf{regret} is the right benchmark.
+  \item The \textbf{Elimination algorithm} achieves $\lg N$ mistakes with a perfect expert.
+  \item \textbf{Weighted Majority} handles imperfect experts with an additive $O(\lg N)$ overhead, analyzed via a potential function argument.
+  \item \textbf{Hedge} uses randomization and exponential updates to achieve sublinear $O(\sqrt{T \ln N})$ regret.
+\end{itemize}
