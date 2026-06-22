@@ -1,0 +1,159 @@
+% ─── Lecture 26: Secretary and Prophet Inequalities ──────────────────────────
+% To include in main.tex: \section{Lecture 26: Secretary and Prophet Inequalities}
+%                         \input{Lecture/Lecture26}
+
+\subsection{Beyond Worst-Case Online Analysis}
+
+Competitive analysis assumes the request sequence may be fully \textbf{adversarial}. This is robust but can be overly harsh. Two classical ways to give the online algorithm more structure --- while keeping decisions \textbf{irrevocable} --- are:
+\begin{itemize}
+  \item items arrive in a \textbf{random order} (secretary problem);
+  \item values are drawn from \textbf{known distributions} (prophet inequalities).
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Model} & \textbf{What we know} & \textbf{Goal} \\
+\midrule
+Secretary problem  & fixed weights; uniformly random arrival order & pick a maximum-weight item \\
+Prophet inequality & independent values with known distributions & get close to $\mathbb{E}[\max_i X_i]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Both ask the same question: \emph{how much value is lost because we must decide online?}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{The Secretary Problem}
+
+Each candidate $j$ has a fixed unknown weight $w_j$ (ties broken arbitrarily). Candidates arrive in \textbf{uniformly random order}; on arrival we see the weight and must \textbf{immediately accept or reject}, accepting at most one. The goal is to maximize the probability of selecting the global maximum:
+\[
+\text{maximize}\quad \mathbb{P}\Bigl[w_{\mathrm{ALG}} = \max_j w_j\Bigr].
+\]
+
+\begin{remark}{Why random order is essential}{whyrandom}
+Against a fully adversarial order, any deterministic rule fails: if it accepts some weight, the adversary places a larger one later; if it waits, the adversary places the maximum earlier. Random order is exactly what prevents the maximum from being placed maliciously before or after our stopping rule.
+\end{remark}
+
+\subsubsection{Two Simple Strategies}
+
+\begin{itemize}
+  \item \textbf{Take the first candidate:} succeeds with probability $\tfrac1n$.
+  \item \textbf{Sample half, then take the first record:} reject the first $n/2$, then accept the first candidate beating all sampled weights. This succeeds with probability $\ge \tfrac14$, since it suffices that the maximum lies in the second half and the second-largest in the first half: $\tfrac12 \cdot \tfrac12$.
+\end{itemize}
+
+\subsubsection{The Threshold Strategy}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Threshold rule (parameter $r$)}
+
+Reject the first $r - 1$ candidates (the \textbf{sample}). Then accept the first candidate whose weight beats every previously seen weight (a new \textbf{record}).
+\end{mdframed}
+
+Choosing $r$ balances two opposing forces: sample enough to \emph{learn}, but do not wait so long that the maximum has already \emph{passed}.
+
+\textbf{Example} ($n = 8$, $r = 4$, higher is better): the stream is $54, 71, 43, 62, 49, 83, 95, 38$ with sample $\{54, 71, 43\}$. The largest sampled weight is $71$; the first later record is $83$ at position $6$, which we accept --- \emph{missing} the true maximum $95$ at position $7$.
+
+\subsubsection{Success Probability}
+
+Suppose the maximum-weight candidate is at position $i \ge r$. We select it \textbf{iff} the largest weight among positions $1, \dots, i-1$ falls inside the sample $1, \dots, r-1$ (otherwise an earlier record is accepted first). Since that largest weight is equally likely in any of the first $i-1$ positions,
+\[
+\mathbb{P}[\text{success} \mid \text{max at } i] = \frac{r-1}{i-1}.
+\]
+The position of the maximum is uniform on $\{1, \dots, n\}$, so
+\[
+\mathbb{P}[\text{success}] = \frac{1}{n}\sum_{i=r}^{n} \frac{r-1}{i-1}.
+\]
+
+\subsubsection{Choosing the Best Threshold}
+
+For large $n$, approximate the sum by an integral. With $\alpha = r/n$,
+\[
+\frac{r-1}{n}\sum_{i=r}^{n}\frac{1}{i-1} \;\approx\; \frac{r}{n}\int_r^n \frac{1}{x}\,dx = \frac{r}{n}\ln\!\Bigl(\frac{n}{r}\Bigr) = \alpha \ln\!\Bigl(\frac1\alpha\Bigr).
+\]
+Maximizing $\alpha \ln(1/\alpha)$ over $\alpha$ gives $\alpha = 1/e$, hence:
+
+\begin{theorem}{Optimal secretary guarantee}{secretary}
+Sampling the first $\approx n/e$ candidates and then taking the first record selects the maximum-weight candidate with probability
+\[
+\mathbb{P}[\text{success}] \;\approx\; \frac{1}{e} \approx 0.3679,
+\]
+and no algorithm can do better than $1/e$ in the classical secretary model.
+\end{theorem}
+
+The magic is not the exact constant but that a \emph{simple} online rule attains a \emph{constant} probability of selecting the global maximum.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Prophet Inequalities}
+
+There are independent nonnegative random variables $X_1, \dots, X_n$ with \textbf{known distributions}. Values are revealed one by one; on seeing $X_i$ we accept (and stop) or reject it forever, accepting at most one. The \textbf{prophet} sees all realizations and gets $M = \max_i X_i$; we compare our expected value to
+\[
+\mathbb{E}[M] = \mathbb{E}\Bigl[\max_i X_i\Bigr].
+\]
+
+\begin{remark}{Why distributions matter}{whydist}
+Without distributions, two values defeat any rule: with $x_1 = 1$ and $x_2$ unknown, accepting $x_1$ lets the adversary set $x_2 = H$ huge, while rejecting it lets the adversary set $x_2 = 0$. Knowing the distributions replaces this impossible worst case by a tractable stochastic one.
+\end{remark}
+
+A prophet inequality asserts $\mathbb{E}[\mathrm{ALG}] \ge \alpha\,\mathbb{E}[M]$ for some constant $\alpha$.
+
+\subsubsection{A Single Threshold Achieves $\tfrac12$}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Threshold rule}
+
+Let $z = \mathbb{E}[M]$ and set $\tau = z/2$. Accept the first value $X_i$ with $X_i \ge \tau$.
+\end{mdframed}
+
+This is a \textbf{posted price}: ``stop as soon as the offer is at least $\tau$.''
+
+\begin{theorem}{Prophet inequality (Samuel-Cahn)}{prophet}
+For independent nonnegative $X_1, \dots, X_n$, the threshold rule with $\tau = \mathbb{E}[\max_i X_i]/2$ satisfies
+\[
+\mathbb{E}[\mathrm{ALG}] \;\ge\; \tfrac12\,\mathbb{E}\Bigl[\max_i X_i\Bigr].
+\]
+The factor $1/2$ is tight for the classical model.
+\end{theorem}
+
+\textbf{Proof.} Write $M = \max_i X_i$, $z = \mathbb{E}[M]$, $\tau = z/2$, and define
+\begin{itemize}
+  \item $q = \mathbb{P}[\text{no value reaches } \tau]$, and $q_i = \mathbb{P}[\text{no value before } i \text{ reaches } \tau]$ (so $q_i \ge q$);
+  \item $b_i = \mathbb{E}\bigl[(X_i - \tau)^+\bigr]$, the expected excess of $X_i$ above the threshold.
+\end{itemize}
+
+\emph{Lower bound on $\mathbb{E}[\mathrm{ALG}]$ (two sources of value).} The algorithm earns the threshold $\tau$ whenever \emph{some} value reaches it, plus the excess above it whenever it stops on $X_i$. Using $q_i \ge q$,
+\[
+\mathbb{E}[\mathrm{ALG}] \;\ge\; \tau\cdot\mathbb{P}[\text{some value reaches }\tau] + q\sum_i b_i = \tau(1-q) + q\sum_i b_i.
+\]
+
+\emph{Upper bound on the prophet.} For \emph{every} realization, $M \le \tau + \sum_i (X_i - \tau)^+$ (the maximum is either below $\tau$, contributing $\le \tau$, or its excess is one of the summands). Taking expectations,
+\[
+z = \mathbb{E}[M] \le \tau + \sum_i b_i,
+\qquad\text{so}\qquad \sum_i b_i \ge z - \tau = \tau \quad(\text{since } \tau = z/2).
+\]
+
+\emph{Combine.}
+\[
+\mathbb{E}[\mathrm{ALG}] \;\ge\; \tau(1-q) + q\sum_i b_i \;\ge\; \tau(1-q) + q\tau \;=\; \tau \;=\; \frac{z}{2}. \qquad\square
+\]
+
+The online algorithm gets at least half of what a prophet gets in expectation, using nothing but a single fixed threshold.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Secretary vs.\ Prophet}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+ & \textbf{Secretary} & \textbf{Prophet} \\
+\midrule
+Information       & observed weights   & value distributions \\
+Arrival           & random order       & usually fixed order \\
+Benchmark         & $\max$ weight      & $\mathbb{E}[\max_i X_i]$ \\
+Simple rule       & sample then record & threshold price \\
+Classic guarantee & $1/e$ success      & $1/2$ expected value \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Same online tension, different information models --- and in both, a \textbf{simple threshold / stopping rule competes with hindsight}.

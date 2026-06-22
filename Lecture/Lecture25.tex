@@ -1,0 +1,183 @@
+% ─── Lecture 25: Online Algorithms and Competitive Analysis ──────────────────
+% To include in main.tex: \section{Lecture 25: Online Algorithms and Competitive Analysis}
+%                         \input{Lecture/Lecture25}
+
+\subsection{From Regret to the Hindsight Optimum}
+
+The previous lecture measured an online algorithm against the \textbf{best single expert in hindsight} (regret). Today we adopt a more demanding yardstick: the \textbf{offline optimum} $\mathrm{OPT}$, which sees the entire request sequence and makes the best possible decisions with full knowledge of the future.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Last lecture} & $\mathrm{loss}(\mathrm{ALG}) \le \min_i \mathrm{loss}(i) + \text{small regret}$ \\
+\textbf{Today} & $\mathrm{cost}_{\mathrm{ALG}}(I) \le r \cdot \mathrm{cost}_{\mathrm{OPT}}(I) + c$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The offline optimum is a very strong benchmark: it is allowed to know the future, while the online algorithm must commit to \textbf{irrevocable} decisions as requests arrive.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Competitive Analysis}
+
+\begin{definition}{Competitive Ratio}{compratio}
+For a minimization problem, an online algorithm is \textbf{$r$-competitive} if there is a constant $c$ (independent of the length of $I$) such that for \emph{every} input sequence $I$,
+\[
+\mathrm{cost}_{\mathrm{ALG}}(I) \;\le\; r \cdot \mathrm{cost}_{\mathrm{OPT}}(I) + c.
+\]
+If $c = 0$ the bound is sometimes called a \emph{strong} competitive ratio. For maximization problems the ratio is written the other way ($\mathrm{ALG} \ge \tfrac1r\,\mathrm{OPT}$).
+\end{definition}
+
+Why this benchmark is useful:
+\begin{itemize}
+  \item \textbf{Instance-by-instance:} we compare $\mathrm{ALG}$ and $\mathrm{OPT}$ on the \emph{same} sequence.
+  \item \textbf{Distribution-free:} no probabilistic assumption on the future is needed.
+  \item \textbf{Robust:} even adversarial request sequences are covered.
+  \item \textbf{But possibly pessimistic:} sometimes \emph{no} online algorithm can stay close to $\mathrm{OPT}$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Rent or Buy: The Ski Rental Problem}
+
+Each ski day we may either \textbf{rent} skis for cost $1$, or \textbf{buy} them once for cost $B$ (and ski free forever after). We do not know in advance how many ski days $T$ there will be. The offline optimum, knowing $T$, pays
+\[
+\mathrm{OPT}(T) = \min\{T, B\}.
+\]
+The online decision is simply: \emph{when should we buy?}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Rent-then-Buy}
+
+Rent every day until the \textbf{total rental cost reaches $B$} (i.e.\ for $B$ days). Then buy.
+\end{mdframed}
+
+\begin{theorem}{Rent-then-Buy is 2-competitive}{skirental}
+For every season length $T$, $\;\mathrm{ALG}(T) \le 2\,\mathrm{OPT}(T)$.
+\end{theorem}
+
+\textbf{Proof.} Two cases on $T$.
+\begin{itemize}
+  \item \textbf{Case $T \le B$:} the algorithm only ever rents, so $\mathrm{ALG}(T) = T = \mathrm{OPT}(T)$.
+  \item \textbf{Case $T > B$:} the algorithm rents for $B$ days (cost $B$) and then buys (cost $B$), so $\mathrm{ALG}(T) \le 2B$. The optimum buys immediately, paying $\mathrm{OPT}(T) = B$. Hence $\mathrm{ALG}(T) \le 2B = 2\,\mathrm{OPT}(T)$.
+\end{itemize}
+In both cases $\mathrm{ALG}(T) \le 2\,\mathrm{OPT}(T)$. \hfill$\square$
+
+\textbf{No deterministic algorithm beats $2$.} Any deterministic rule buys on some fixed day $x$ (if skiing lasts long enough). An adversary, knowing $x$, sets the season length: if $x \le B$ it stops the season exactly when the algorithm buys; if $x > B$ it lets skiing continue until the buy. For large $B$ the ratio is forced arbitrarily close to $2$, so rent-then-buy is essentially the best deterministic strategy.
+
+\begin{remark}{Randomization helps}{skirand}
+A randomized buy-day achieves expected competitive ratio $\frac{e}{e-1} \approx 1.58$, which is optimal against an oblivious adversary. This $\frac{e}{e-1}$ constant recurs throughout online algorithms.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Caching (Paging)}
+
+A cache holds $k$ pages. Requests $\sigma = (p_1, \dots, p_T)$ arrive online. A request to a page already in cache is a \textbf{hit} (cost $0$); otherwise it is a \textbf{miss} (cost $1$), the page is brought in, and if the cache is full some page must be \textbf{evicted}. The cost is the number of misses, and the online decision is \emph{which page to evict}.
+
+\subsubsection{The Offline Optimum: Belady's Rule}
+
+\begin{theorem}{Farthest-in-the-Future (Belady)}{belady}
+When the entire request sequence is known, the optimal eviction rule is: on a miss, evict the page whose \textbf{next request is farthest in the future}.
+\end{theorem}
+
+Intuition: keep pages needed soon, evict pages not needed for a long time. This is \emph{not} an online algorithm --- it is the benchmark $\mathrm{OPT}$.
+
+\subsubsection{Online Eviction Rules}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Rule} & \textbf{Evicts} \\
+\midrule
+LRU  & the least recently used page \\
+FIFO & the page that entered the cache earliest \\
+LFU  & the least frequently used page \\
+LIFO & the page that entered most recently \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Some rules are arbitrarily bad.} With a cache of size $k$ initially holding $\{1,\dots,k\}$, the stream $k{+}1,\, k,\, k{+}1,\, k,\, \dots$ makes \textbf{LIFO} miss on \emph{every} request, while $\mathrm{OPT}$ misses once and then keeps both $k$ and $k{+}1$. So LIFO has \emph{unbounded} competitive ratio; a similar construction defeats LFU.
+
+\subsubsection{Deterministic Lower Bound}
+
+\begin{theorem}{No deterministic rule beats $k$}{cachelb}
+Every deterministic online caching algorithm has competitive ratio at least $k$.
+\end{theorem}
+
+\textbf{Adversary.} Restrict to pages $\{1, \dots, k+1\}$. At each step request the unique page among these that is \emph{not} currently in the algorithm's cache. The online algorithm then misses on \emph{every} request. Meanwhile $\mathrm{OPT}$ (farthest-in-the-future) can arrange at least $k$ hits between consecutive misses. Hence the best possible deterministic ratio is $\ge k$.
+
+\subsubsection{LRU is $k$-competitive}
+
+\textbf{Phases.} Partition $\sigma$ into \textbf{phases}: a phase is a maximal consecutive block containing at most $k$ distinct pages; a new phase begins exactly when a request would introduce a $(k{+}1)$st distinct page. Let $P$ be the number of phases. For example, with $k=3$,
+\[
+\underbrace{4,1,2,1}_{\text{phase }1}\;\;\underbrace{5,3,4,4}_{\text{phase }2}\;\;\underbrace{1,2,3}_{\text{phase }3}.
+\]
+
+\begin{theorem}{LRU bound}{lru}
+$\mathrm{LRU}(\sigma) \le k \cdot \mathrm{OPT}(\sigma) + O(k)$.
+\end{theorem}
+
+\textbf{Upper bound: LRU misses $\le k$ per phase.} A phase has at most $k$ distinct pages, and LRU can miss only on the \emph{first} appearance of each. Once a page has been requested within the phase it is among the $\le k$ most-recently-used pages, so LRU will not evict it before the phase ends. Hence $\mathrm{LRU}(\sigma) \le kP$.
+
+\textbf{Lower bound: OPT misses $\ge 1$ per phase.} When a new phase starts, a page appears that was not among the $k$ distinct pages of the previous phase. Across the previous phase plus this first new request there are $k+1$ distinct pages --- too many for a size-$k$ cache --- so $\mathrm{OPT}$ must miss at least once per phase (up to startup): $\mathrm{OPT}(\sigma) \ge P - O(1)$.
+
+\textbf{Combine.} $\mathrm{LRU}(\sigma) \le kP \le k\bigl(\mathrm{OPT}(\sigma) + O(1)\bigr) = k\cdot\mathrm{OPT}(\sigma) + O(k)$. Together with the lower bound, \textbf{LRU is asymptotically optimal} among deterministic online caching algorithms.
+
+\begin{remark}{Randomization helps again}{marking}
+The randomized \textbf{marking algorithm} (mark a page when requested; on a miss evict a uniformly random \emph{unmarked} page; when all pages are marked, unmark everything and start a new phase) achieves
+\[
+\mathbb{E}[\text{misses}] \le 2H_k \cdot \mathrm{OPT} = O(\log k)\cdot \mathrm{OPT},
+\]
+and no randomized algorithm can beat $\Omega(H_k)$. Randomization improves caching from $\Theta(k)$ to $\Theta(\log k)$.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Online Bipartite Matching}
+
+A bipartite graph $G = (L, R, E)$: the offline side $L$ is known in advance; the online vertices $R$ arrive one at a time. When $r \in R$ arrives we see its neighbourhood $N(r) \subseteq L$ and must \textbf{immediately} either match $r$ to an unmatched neighbour, or leave it unmatched (irrevocably). The goal is to maximize the number of matched arrivals; $\mathrm{OPT} = |M^\star|$ is a maximum matching of the full graph.
+
+\begin{remark}{Why this model is a classic}{adwords}
+Introduced by Karp, Vazirani \& Vazirani (STOC 1990), it cleanly separates deterministic ($\tfrac12$) from randomized ($1 - \tfrac1e$) guarantees. It is also the core abstraction behind \textbf{ad allocation / AdWords}: offline vertices are advertisers (with budgets), online vertices are user impressions, an edge means the ad is eligible, and a matched edge earns revenue. In the unit-budget, unit-value case, ad allocation \emph{is} online bipartite matching.
+\end{remark}
+
+\subsubsection{Deterministic Greedy}
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Greedy}
+
+When $r$ arrives, match it to \textbf{any} currently unmatched neighbour in $L$, if one exists.
+\end{mdframed}
+
+\begin{theorem}{Greedy is $\tfrac12$-competitive}{greedy}
+For every instance, $|M_{\mathrm{greedy}}| \ge \tfrac12 |M^\star|$; equivalently greedy is a deterministic $2$-approximation.
+\end{theorem}
+
+\textbf{Proof (charging).} Let $M$ be the greedy matching and $M^\star$ an offline optimum.
+
+\emph{Claim: every edge of $M^\star$ touches some edge of $M$.} Take $(l, r) \in M^\star$. If greedy matched $r$, then $(l,r)$ shares the endpoint $r$ with a greedy edge. If greedy left $r$ unmatched, it was because \emph{all} of $r$'s neighbours --- in particular $l$ --- were already matched by greedy when $r$ arrived; so $(l,r)$ shares the endpoint $l$ with a greedy edge.
+
+Charge each optimum edge to a greedy edge it touches. A single greedy edge has only two endpoints, so it can be charged by at most two optimum edges, giving $|M^\star| \le 2|M|$. \hfill$\square$
+
+\textbf{Tightness.} With $L = \{a, b\}$: the first arrival $r_1$ is adjacent to both. If the deterministic algorithm matches $r_1$ to $a$, the adversary sends $r_2$ adjacent only to $a$. The algorithm gets $1$ match; $\mathrm{OPT}$ matches $r_1\!-\!b$ and $r_2\!-\!a$ for $2$ (symmetrically if it had chosen $b$). No deterministic algorithm guarantees more than $\tfrac12$.
+
+\subsubsection{The KVV Ranking Algorithm}
+
+The fix is to \textbf{break symmetry once}, before any arrivals.
+
+\begin{mdframed}[backgroundcolor=lightblue, linecolor=keyblue, linewidth=1pt]
+\textbf{Ranking (Karp--Vazirani--Vazirani)}
+
+Pick a uniformly random permutation $\pi$ of the offline vertices $L$. When $r$ arrives, match it to the unmatched neighbour with \textbf{smallest $\pi$-rank}, if one exists.
+\end{mdframed}
+
+Ranking is still greedy, but the tie-breaking is \emph{global and randomized}: each offline vertex gets a fixed random priority.
+
+\begin{theorem}{Ranking guarantee (KVV, 1990)}{kvv}
+For every fixed online bipartite matching instance,
+\[
+\mathbb{E}\bigl[|M_{\mathrm{Ranking}}|\bigr] \;\ge\; \left(1 - \tfrac{1}{e}\right)|M^\star|.
+\]
+Moreover, \textbf{no} randomized online algorithm can guarantee a ratio better than $1 - \tfrac1e$ against an oblivious adversary.
+\end{theorem}
+
+The recurring moral across ski rental, caching, and matching: \textbf{randomization can beat the best deterministic guarantee.}
